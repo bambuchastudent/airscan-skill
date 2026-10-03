@@ -1,0 +1,59 @@
+schema: spec-driven
+
+context: |
+  AirScan is a local-first travel graph, background crawler, and fare-observation system.
+  Initial origin airports: VLC, CDT, ALC, MAD, BCN.
+  Primary low-cost scope: Ryanair, Vueling, easyJet, Wizz Air, Volotea, with an extensible provider model.
+
+  Production language: Java 25 LTS.
+  Build: Maven.
+  Runtime framework: current stable Quarkus 3.x selected and pinned during bootstrap.
+  Initial database: SQLite with explicit migrations and deliberate concurrency design.
+  Frontend direction: TypeScript + Vite + MapLibre GL JS.
+  Ground-routing direction: Transitous/MOTIS behind a provider boundary.
+
+  Route topology, schedule availability, fare observation, and ground routing are separate concerns.
+  Fare observations are append-only historical evidence.
+  Normalized facts retain provenance and scan identity.
+  Failed/transient scans never count as negative route evidence.
+  Partial scans never become current published snapshots.
+  Runtime correctness must not depend on an LLM.
+
+  Development tooling:
+  - OpenSpec for change planning and behavior contracts.
+  - Graphify for repository knowledge/impact analysis.
+  - Serena for semantic IDE/MCP navigation and targeted edits.
+  - Alloy for bounded structural/domain invariants.
+  - TLA+/TLC for concurrency and state-machine checking.
+  - Dafny for selected pure deterministic core logic compiled to Java.
+
+  Agent evidence trail:
+  - docs/agent/MEMORY.md for curated current state.
+  - docs/agent/WORKLOG.md for append-only change/verification history.
+  - docs/agent/iterations/ for per-iteration handoff summaries.
+  - docs/reviews/ for self-contained external review reports.
+
+rules:
+  proposal:
+    - Keep each change cohesive and small enough for independent review.
+    - State new and modified capabilities explicitly.
+    - Identify formal-invariant impact when the change touches retention, identity, ranking, scheduling, or publication.
+  specs:
+    - Describe observable behavior, inputs, outputs, failure semantics, freshness, and constraints.
+    - Use one behavior per requirement and testable WHEN/THEN scenarios.
+    - Keep framework/library/class details out of specs unless the mechanism is itself part of the contract.
+    - Distinguish UNKNOWN from inferred/known data; never specify guessed metadata as truth.
+  design:
+    - Document source provenance, failure modes, rate limiting, caching, and adapter boundaries for external integrations.
+    - Document SQLite transaction/write-concurrency implications for persistence changes.
+    - State which invariant IDs apply and which formal tool, if any, validates them.
+    - Prefer documented/public APIs and official sources; label discovered/unstable endpoints explicitly.
+    - Do not introduce browser automation without documenting why simpler supported access is insufficient.
+  tasks:
+    - Every tracked task must include deterministic verification evidence.
+    - Keep tests and documentation with the task group that introduces the behavior.
+    - Include OpenSpec validation and relevant formal checks before completion.
+    - Do not create one task that implements multiple unrelated providers.
+    - A task is incomplete until WORKLOG and the iteration handoff have been updated.
+    - Update MEMORY.md whenever durable project state or architecture facts change.
+    - A change is not ready for archive until a self-contained review report exists.
