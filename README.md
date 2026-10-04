@@ -1,6 +1,6 @@
 # AirScan
 
-AirScan is a **local-first travel graph, low-cost route crawler, and fare observation system**.
+AirScan is a **distributed, local-friendly travel graph, low-cost route crawler, and fare observation system**.
 
 Its purpose is to maintain a reusable local knowledge base of direct flight routes, observed fares, nearby airports, and ground-transport connections so route discovery does not have to start from web search every time.
 
@@ -27,7 +27,8 @@ AirScan should:
 - distinguish a route that exists from a fare that happened to be visible during one scan;
 - calculate geographic proximity between destination airports and useful cities/airports;
 - discover real ground/public-transport connectivity separately from straight-line distance;
-- expose a local API and map UI;
+- expose REST/OpenAPI, CLI, MCP, JSON export, and a hosted map UI;
+- allow crawler workers to run locally, in Cloud Run Jobs, CI runners, or other hosts while sharing one authoritative control plane;
 - show the **10 cheapest observed destinations per origin** for the next **7, 90, and 180 days** based on the most recent successful applicable scan;
 - remain useful without an LLM at runtime.
 
@@ -65,12 +66,29 @@ The planned runtime stack is:
 - Java 25 LTS
 - Maven
 - stable Quarkus 3.x selected and pinned during bootstrap
-- SQLite with explicit migrations and deliberate WAL/write-concurrency design
-- MapLibre GL JS + TypeScript/Vite for the map UI
+- Google Cloud Run for the hosted REST/OpenAPI control plane and MCP adapter
+- Cloud Firestore for authoritative operational/materialized state
+- Cloud Storage for compressed append-only scan/fare archives
+- SQLite on crawler workers for local cache/spool/outbox and offline recovery
+- Firebase Hosting for the static TypeScript/Vite + MapLibre GL JS UI
 - Transitous/MOTIS behind a ground-routing provider boundary
 - JUnit 5 + AssertJ for deterministic tests
 
 Python is not the production implementation language.
+
+## Runtime interfaces and deployment
+
+AirScan is not MCP-first. The primary programmatic contract is versioned REST/OpenAPI.
+
+- **Web UI:** static map/dashboard on Firebase Hosting.
+- **REST/OpenAPI:** stable query/control contract from Cloud Run.
+- **CLI/JSON:** local operations, scripting, and agent fallback.
+- **MCP:** a thin adapter over the same application services, hosted on Cloud Run.
+- **Worker API:** authenticated HTTPS lease/heartbeat/submission protocol for distributed crawler workers.
+
+Crawler workers never write the central Firestore database directly. They submit idempotent normalized observation batches to the control plane. Workers may cache/spool locally in SQLite and reconnect later.
+
+The Google-first deployment target is documented in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Cloud-specific details stay behind application/storage ports so the domain remains testable locally.
 
 ## Agentic development
 
@@ -92,7 +110,8 @@ The repository is currently in bootstrap/specification phase.
 Pending OpenSpec changes are intentionally staged:
 
 1. `bootstrap-agentic-foundation`
-2. `add-route-topology`
-3. `add-durable-scan-retention`
+2. `add-distributed-control-plane`
+3. `add-route-topology`
+4. `add-durable-scan-retention`
 
 Do not jump directly to provider mass-implementation. Apply and verify changes in dependency order.

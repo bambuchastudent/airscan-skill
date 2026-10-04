@@ -149,22 +149,22 @@ Prefer explicit SQL/repository boundaries over a large ORM unless a design docum
 
 ### Persistence
 
-Initial local store: SQLite.
+AirScan has two persistence tiers plus worker-local state.
 
-Bootstrap/design must address:
-- WAL mode where appropriate;
-- busy timeout;
-- transaction boundaries;
-- one-writer constraints;
-- append-only fare observations;
-- schema migrations;
-- backup/rebuild strategy for derived data.
+**Central operational/materialized state:** Cloud Firestore is the preferred Google-first implementation. It stores authoritative route/job/snapshot state and query-friendly materializations. Designs must minimize hot documents/index fanout and use transactions only where invariants require them.
+
+**Historical/archive state:** Cloud Storage is preferred for compressed immutable scan/fare batches and sanitized retained source artifacts. Do not spend Firestore document writes on large raw history when an append-only object segment is sufficient.
+
+**Worker-local state:** SQLite is used for cache, spool/outbox, offline recovery, and local development. It is not the authoritative distributed database.
+
+Worker SQLite design must address WAL/busy-timeout behavior, short transactions, crash-safe outbox semantics, migrations, and rebuildability of derived cache. Central designs must address Firestore contention, idempotent ingestion, query/index cost, archive lifecycle, and emulator-based deterministic tests where practical.
 
 ### Frontend
 
 - TypeScript
 - Vite
 - MapLibre GL JS
+- Firebase Hosting as the preferred static host/CDN
 
 Do not add React/Vue/etc. until UI complexity demonstrates a need.
 
@@ -174,6 +174,33 @@ Initial map views:
 - top 10 cheapest observed direct destinations per origin;
 - observation/snapshot freshness;
 - route detail including airline, date, price, and ground-neighborhood information when known.
+
+### Interfaces
+
+Primary machine interface: versioned REST/OpenAPI.
+
+Additional interfaces:
+- CLI with JSON output for local operations/automation;
+- MCP adapter over the same application services;
+- authenticated worker HTTPS API for lease/heartbeat/result submission.
+
+Do not duplicate business rules in MCP handlers.
+
+### Google-first deployment
+
+Preferred low-cost topology:
+
+- Firebase Hosting — static UI;
+- Cloud Run — REST/OpenAPI control plane and MCP;
+- Firestore — authoritative operational/materialized data;
+- Cloud Storage — compressed append-only archives;
+- Cloud Scheduler — a small number of wake-up/plan triggers;
+- Cloud Run Jobs — optional cloud crawler workers;
+- local/other-host workers — the same HTTPS worker protocol.
+
+Firebase Hosting may rewrite ordinary API calls to Cloud Run. Do not depend on Hosting rewrites for long-lived MCP transports; use the direct Cloud Run endpoint when transport duration/streaming requires it.
+
+Cloud deployment may use billing-enabled pay-as-you-go services while remaining inside no-cost quotas at hobby scale where possible. Configure budget alerts and measure usage before increasing scan frequency.
 
 ### Ground routing
 

@@ -4,7 +4,7 @@ These instructions apply to every AI coding agent working in this repository.
 
 ## Mission
 
-Build AirScan as a local-first, deterministic travel graph and fare-observation system. LLMs may assist development and optional analysis, but the runtime route graph, scheduler, persistence, ranking, provenance, and correctness checks must not depend on an LLM.
+Build AirScan as a distributed, local-friendly, deterministic travel graph and fare-observation system. LLMs may assist development and optional analysis, but the runtime route graph, scheduler, persistence, ranking, provenance, and correctness checks must not depend on an LLM.
 
 Initial origins: `VLC`, `CDT`, `ALC`, `MAD`, `BCN`.
 
@@ -163,8 +163,9 @@ Rules:
 Current intended order:
 
 1. `bootstrap-agentic-foundation`
-2. `add-route-topology`
-3. `add-durable-scan-retention`
+2. `add-distributed-control-plane`
+3. `add-route-topology`
+4. `add-durable-scan-retention`
 
 ## Repository navigation policy
 
@@ -235,8 +236,12 @@ Baseline direction:
 - Java 25 LTS;
 - Maven;
 - a current stable Quarkus 3.x version pinned during bootstrap;
-- SQLite with migrations and deliberate WAL/write-concurrency design;
-- TypeScript + Vite + MapLibre GL JS for the local map UI;
+- two runtime roles: hosted control plane and portable crawler worker;
+- Google Cloud Run as the preferred hosted REST/OpenAPI control-plane and MCP target;
+- Cloud Firestore as the preferred authoritative operational/materialized store;
+- Cloud Storage as the preferred append-only compressed scan/fare archive;
+- SQLite on crawler workers as local cache/spool/outbox, not as the distributed source of truth;
+- Firebase Hosting for the static TypeScript + Vite + MapLibre GL JS map UI;
 - Transitous/MOTIS behind a replaceable ground-routing provider boundary;
 - JUnit 5 + AssertJ.
 
@@ -250,6 +255,20 @@ Prefer ports/adapters boundaries for external sources:
 
 HTTP/HTML details must not leak into domain logic.
 
+## Distributed runtime rules
+
+- The control plane owns authoritative operational state, job/lease state, current snapshots, materialized query indexes, and publication decisions.
+- Crawler workers may run on a developer machine, Cloud Run Jobs, CI runners, or other hosts reachable over HTTPS.
+- Workers must not write Firestore or authoritative Cloud Storage objects directly unless a future reviewed design explicitly changes this rule.
+- Workers receive work and submit results through a versioned authenticated worker protocol with idempotency keys.
+- Workers may continue collecting into a local SQLite spool/outbox during temporary control-plane/network unavailability.
+- REST/OpenAPI is the primary machine contract. MCP is a thin adapter over application services, not a second source of business logic.
+- The static web app consumes the read/query API rather than depending on the Firestore schema directly.
+- Full scan/fare history should prefer immutable compressed archive batches; Firestore should hold operational state and materialized/query-friendly summaries rather than every raw payload.
+- Google Cloud is the preferred deployment, but domain/application code must not import cloud-specific concerns across architectural boundaries.
+- Keep Cloud Run minimum instances at zero unless measurements justify otherwise.
+- When billing is enabled, configure budget alerts and record expected cost drivers; alerts are monitoring, not a hard spending cap.
+
 ## Data rules
 
 - Normalized facts retain provenance.
@@ -261,6 +280,8 @@ HTTP/HTML details must not leak into domain logic.
 - A partial scan must never become the current published snapshot.
 - Older completed work must not replace a newer published snapshot.
 - Public dashboards must expose staleness/freshness.
+- Central writes from distributed workers must be idempotent and attributable to worker, lease/job, scan, and source.
+- Raw browser/HTTP payloads must not be stored in Firestore merely for convenience; sanitize and archive only when retention is justified.
 
 ## Source-access rules
 
