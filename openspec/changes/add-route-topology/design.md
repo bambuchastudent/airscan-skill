@@ -2,7 +2,7 @@
 
 ## Context
 
-This change follows bootstrap-agentic-foundation. Fare crawling depends on a stable route graph, but route topology and fare state have different refresh rates and failure semantics.
+This change follows bootstrap-agentic-foundation and add-distributed-control-plane. Fare crawling depends on a stable route graph, but route topology and fare state have different refresh rates and failure semantics.
 
 ## Goals / Non-Goals
 
@@ -37,9 +37,13 @@ Airline sources may provide additional topology evidence but are not required fo
 
 ### Persistence
 
-Use SQLite migrations. Preserve normalized entities separately from evidence observations. Do not overwrite historical evidence when the same route is observed again.
+Use a storage/application boundary rather than coupling the domain model to one database.
 
-The schema must support first_seen/last_seen derivation without losing individual observation provenance.
+The authoritative hosted implementation targets Firestore through the control plane. Worker-local SQLite may cache topology and spool observations but is not authoritative.
+
+Preserve normalized entities separately from evidence observations. Do not overwrite historical evidence when the same route is observed again. Bulk immutable scan evidence may be archived as compressed Cloud Storage objects while Firestore keeps operational/materialized route state and provenance pointers.
+
+The model must support first_seen/last_seen derivation without losing individual observation provenance.
 
 ### Identity and invariants
 
@@ -61,3 +65,4 @@ Store airport coordinates from a documented dataset/source. Geographic distance 
 - [Carrier attribution differs by source] -> evidence model retains source-specific observations; normalization must not invent certainty.
 - [Codeshare/seasonal ambiguity] -> route topology records what the source states and leaves schedule semantics to later capabilities.
 - [Coordinate dataset drift] -> provenance/version the airport catalog source.
+- [Firestore write/index cost] -> ingest idempotent batches through the control plane and materialize only query-relevant operational state; archive bulky history separately.

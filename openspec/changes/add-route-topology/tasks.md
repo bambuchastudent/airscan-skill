@@ -3,7 +3,7 @@
 ## 1. Domain and persistence
 
 - [ ] 1.1 Define airport, carrier, route, source, scan, and route-evidence domain contracts aligned with INV-ROUTE-001/002 and INV-EVIDENCE-001; verify unit tests cover canonical identity and invalid endpoint cases.
-- [ ] 1.2 Add SQLite migrations/repositories for airport catalog, normalized routes, sources, scan runs, and route evidence; verify migrations apply from an empty database and repository integration tests preserve evidence history.
+- [ ] 1.2 Implement storage boundaries and the central topology persistence path using the distributed control-plane store, plus worker-local SQLite cache/spool only where needed; verify deterministic emulator/local integration tests preserve evidence history and idempotent ingestion.
 - [ ] 1.3 Add configurable origins with VLC/CDT/ALC/MAD/BCN defaults and verify configuration override tests.
 
 ## 2. Formal identity/evidence checks
@@ -24,5 +24,5 @@
 
 ## 5. Integration
 
-- [ ] 5.1 Run topology ingestion end-to-end into a clean local database, verify repeated observations attach to stable route identity, and verify provenance can be queried.
+- [ ] 5.1 Run topology ingestion end-to-end through the worker/control-plane boundary into a clean emulated/local central store, verify repeated submissions attach to stable route identity, and verify provenance can be queried.
 - [ ] 5.2 Run Maven tests, relevant Alloy/Dafny checks, strict OpenSpec validation, and Graphify/Serena impact review before marking the change complete.

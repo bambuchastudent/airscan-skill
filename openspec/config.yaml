@@ -1,15 +1,20 @@
 schema: spec-driven
 
 context: |
-  AirScan is a local-first travel graph, background crawler, and fare-observation system.
+  AirScan is a distributed, local-friendly travel graph, background crawler, and fare-observation system.
   Initial origin airports: VLC, CDT, ALC, MAD, BCN.
   Primary low-cost scope: Ryanair, Vueling, easyJet, Wizz Air, Volotea, with an extensible provider model.
 
   Production language: Java 25 LTS.
   Build: Maven.
   Runtime framework: current stable Quarkus 3.x selected and pinned during bootstrap.
-  Initial database: SQLite with explicit migrations and deliberate concurrency design.
-  Frontend direction: TypeScript + Vite + MapLibre GL JS.
+  Preferred hosted control plane: Google Cloud Run.
+  Preferred central operational/materialized database: Cloud Firestore.
+  Preferred historical archive: Google Cloud Storage with compressed append-only scan/fare batches.
+  Worker-local persistence: SQLite for cache/spool/outbox and offline recovery.
+  Frontend direction: TypeScript + Vite + MapLibre GL JS on Firebase Hosting.
+  Primary machine interface: versioned REST/OpenAPI; MCP is a thin adapter, not the core contract.
+  Crawler workers may run locally, in Cloud Run Jobs, CI runners, or other hosts and communicate with the control plane over authenticated HTTPS.
   Ground-routing direction: Transitous/MOTIS behind a provider boundary.
 
   Route topology, schedule availability, fare observation, and ground routing are separate concerns.
@@ -45,7 +50,10 @@ rules:
     - Distinguish UNKNOWN from inferred/known data; never specify guessed metadata as truth.
   design:
     - Document source provenance, failure modes, rate limiting, caching, and adapter boundaries for external integrations.
-    - Document SQLite transaction/write-concurrency implications for persistence changes.
+    - Document both worker-local SQLite and central Firestore transaction/contention implications for persistence changes.
+    - Keep distributed workers behind a versioned idempotent worker API; workers must not directly mutate authoritative Firestore state.
+    - Prefer Cloud Storage for compressed immutable history/raw archives and Firestore for operational/materialized state.
+    - For hosted components, document cost drivers, region, scale-to-zero behavior, and budget-alert assumptions.
     - State which invariant IDs apply and which formal tool, if any, validates them.
     - Prefer documented/public APIs and official sources; label discovered/unstable endpoints explicitly.
     - Do not introduce browser automation without documenting why simpler supported access is insufficient.

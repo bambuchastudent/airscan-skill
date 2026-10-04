@@ -2,8 +2,8 @@
 
 ## 1. Durable scan state
 
-- [ ] 1.1 Define scan plan/job/run/lease/result contracts and SQLite migrations, then verify migrations and repository tests from a clean database.
-- [ ] 1.2 Implement atomic lease acquisition/expiry/recovery semantics aligned with INV-SCAN-001/002 and verify concurrent integration tests cannot obtain two valid leases for one logical job.
+- [ ] 1.1 Define scan plan/job/run/lease/result contracts for the central control-plane store plus worker-local SQLite outbox/recovery state, then verify deterministic emulator/local persistence tests from clean state.
+- [ ] 1.2 Implement lease acquisition/heartbeat/expiry/recovery through the authenticated worker API aligned with INV-SCAN-001/002 and verify concurrent integration tests cannot obtain two valid leases for one logical job.
 - [ ] 1.3 Implement classified retry/backoff configuration and verify failed transport/parser outcomes cannot be recorded as successful negative observations.
 
 ## 2. Formal scheduler model
@@ -19,7 +19,7 @@
 
 ## 4. Atomic snapshot publication
 
-- [ ] 4.1 Implement persisted snapshot/generation state and publication transaction semantics; verify partial/failed snapshots never become current.
+- [ ] 4.1 Implement central persisted snapshot/generation state and Firestore transaction/compare-and-set publication semantics; verify partial/failed snapshots never become current.
 - [ ] 4.2 Implement monotonic publication protection and verify an older late-finishing scan cannot replace a newer current snapshot.
 - [ ] 4.3 Expose backing snapshot identity/freshness to query consumers and verify deterministic integration tests.
 

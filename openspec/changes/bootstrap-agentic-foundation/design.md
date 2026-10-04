@@ -10,7 +10,8 @@ Goals:
 
 - a reproducible Java 25/Maven baseline;
 - a stable Quarkus 3.x release pinned only after verification;
-- explicit module boundaries that do not over-modularize the empty project;
+- explicit runtime boundaries for a hosted control plane and portable crawler worker without over-modularizing the empty project;
+- stable interface direction: REST/OpenAPI primary, CLI/JSON for local automation, MCP as an adapter;
 - working OpenSpec, Graphify, and Serena workflows;
 - runnable formal-method toolchain entry points;
 - deterministic CI evidence.
@@ -19,7 +20,8 @@ Non-goals:
 
 - airline/airport scraping;
 - price providers;
-- persistence domain schema beyond what bootstrap tooling requires;
+- production Firestore/Cloud Storage provisioning;
+- production crawler/job protocol implementation;
 - dashboard implementation;
 - full formal models.
 
@@ -31,7 +33,29 @@ Use Java 25 LTS and Maven. Select the current stable Quarkus 3.x release during 
 
 ### Initial repository shape
 
-Start with the minimum number of Maven modules justified by real boundaries. Do not pre-create one module per future capability. A reasonable initial split is a backend application plus a verified-core integration boundary only when Dafny output exists.
+Start with the minimum number of Maven modules justified by real boundaries. Do not pre-create one module per future capability.
+
+The bootstrap architecture must preserve two real runtime roles:
+
+- **control plane** — hosted API/query/MCP application, later targeted at Cloud Run;
+- **crawler worker** — portable execution process that can run locally or as a cloud job.
+
+Shared domain/application code may live in a common module if that reduces duplication. Bootstrap does not provision Google Cloud resources.
+
+### Interface and cloud boundary
+
+REST/OpenAPI is the primary machine-facing contract. CLI/JSON is the primary local/script interface. MCP will be a thin adapter over the same application services after stable query behavior exists.
+
+Preferred hosted architecture:
+
+- Firebase Hosting for static UI;
+- Cloud Run for REST/OpenAPI control plane and MCP;
+- Firestore for authoritative operational/materialized state;
+- Cloud Storage for append-only compressed history;
+- SQLite on workers for local cache/spool/outbox;
+- Cloud Scheduler and Cloud Run Jobs only where later changes justify them.
+
+Bootstrap only establishes code/configuration boundaries that do not make this deployment difficult. It must not require live cloud credentials to build or test.
 
 ### Agent navigation
 
@@ -60,7 +84,9 @@ Local secrets stay outside git. Recorded HTTP fixtures must be sanitized before 
 ## Risks / Trade-offs
 
 - [Tool installation differences across machines] -> document exact verified versions and checks; fail clearly when optional development tools are unavailable.
-- [Premature multi-module complexity] -> create only modules needed for bootstrap boundaries.
+- [Premature multi-module complexity] -> create only modules needed for the control-plane/worker/shared boundaries.
+- [Cloud lock-in leaks into domain] -> keep Firestore/Cloud Run/Firebase behind deployment/storage adapters and test application logic without cloud credentials.
+- [Free-tier assumptions become architecture] -> treat quotas as cost constraints to measure, not correctness assumptions; archive bulk history outside Firestore.
 - [Formal tools become ceremonial] -> each formal tool gets a minimal executable gate and later product changes must reference invariant IDs when they use it.
 - [Agent-specific setup churn] -> prefer vendor-neutral OpenSpec skills where possible and keep root AGENTS.md authoritative.
 

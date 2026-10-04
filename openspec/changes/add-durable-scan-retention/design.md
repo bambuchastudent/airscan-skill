@@ -2,7 +2,7 @@
 
 ## Context
 
-This change depends on persisted route evidence from add-route-topology. Background crawling introduces concurrency and partial-failure risks that should be fixed before live fare providers multiply.
+This change depends on add-distributed-control-plane and persisted route evidence from add-route-topology. Background crawling introduces concurrency and partial-failure risks that should be fixed before live fare providers multiply.
 
 ## Goals / Non-Goals
 
@@ -19,23 +19,27 @@ Goals:
 Non-goals:
 
 - specific airline fare adapters;
-- distributed multi-node deployment;
-- high-throughput message brokers;
+- a high-throughput message broker;
+- provider-specific fare crawling;
 - dashboard UI.
 
 ## Decisions
 
 ### Durable state over in-memory scheduling
 
-Persist plans/jobs/leases/runs in SQLite. The scheduler may use timers to wake up, but timers are not the source of truth.
+Persist authoritative plans/jobs/leases/runs in the central control-plane store (preferred implementation: Firestore). The scheduler may use Cloud Scheduler or local timers to wake the planner, but timers are not the source of truth.
 
-### SQLite write discipline
+Distributed workers obtain leases and submit results through the worker HTTPS protocol. Worker-local SQLite may persist leased work state and an outbox for crash/offline recovery, but it cannot publish authoritative snapshots by itself.
 
-Design for SQLite's single-writer characteristics. Prefer short explicit transactions and a controlled writer boundary rather than allowing unbounded crawler threads to contend on writes.
+### Central and worker write discipline
+
+Use Firestore transactions only for invariants that need compare-and-set/atomicity, such as lease acquisition and monotonic snapshot publication. Avoid a single global coordination document that becomes a hotspot.
+
+Worker SQLite uses short explicit transactions and a crash-safe outbox. Network retries must be idempotent so reconnecting workers cannot duplicate logical observations.
 
 ### Lease model
 
-A lease has explicit owner/token, acquired time, and expiry. Completion/retry operations must validate ownership/version so stale workers cannot publish after losing the lease.
+A lease has explicit worker identity, owner/token, acquired time, and expiry. Completion/retry operations must validate ownership/version so stale workers cannot publish after losing the lease.
 
 ### Retry semantics
 
@@ -62,7 +66,8 @@ Alloy models route lifecycle/evidence structure where useful. Dafny may implemen
 
 ## Risks / Trade-offs
 
-- [SQLite contention under aggressive parallel scans] -> bounded workers, per-host limits, short transactions, controlled write path.
+- [Firestore contention/hotspotting] -> shard independent job state, avoid global counters, keep transactions narrow, and verify with emulator/concurrency tests.
+- [Worker SQLite contention] -> bounded local concurrency, short transactions, and a controlled outbox write path.
 - [Lease expiry during slow source request] -> explicit heartbeat/lease-renewal policy or conservative lease duration documented before implementation.
 - [Overly aggressive route deactivation] -> only successful relevant misses count; thresholds are configurable and history is never erased.
 - [State-machine implementation diverges from model] -> invariant IDs and tests map modeled transitions to production behavior.
