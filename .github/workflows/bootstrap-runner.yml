@@ -1,0 +1,41 @@
+name: Bootstrap runner baseline
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  runner-baseline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+      - name: Inspect Java and Maven
+        shell: bash
+        run: |
+          set -euo pipefail
+          java -version
+          javac -version
+          mvn -version
+      - name: Verify repository bootstrap contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s AGENTS.md
+          test -s README.md
+          test -s docs/TOOLING.md
+          test -s formal/INVARIANTS.md
+          test -s openspec/config.yaml
+          test -s openspec/changes/bootstrap-agentic-foundation/tasks.md
+          echo 'Bootstrap contract files present'
