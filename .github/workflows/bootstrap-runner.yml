@@ -24,7 +24,7 @@ jobs:
         run: |
           java -version
           javac -version
-          mvn -version
+          bash mvnw -version
       - name: Bootstrap contracts
         run: |
           test -s AGENTS.md
@@ -32,6 +32,8 @@ jobs:
           test -s formal/INVARIANTS.md
           test -s openspec/config.yaml
           test -s openspec/changes/bootstrap-agentic-foundation/tasks.md
+      - name: Deterministic Java formatting check
+        run: bash mvnw -B -ntp spotless:check
       - name: Maven verification and Quarkus HTTP tests
         shell: bash
         run: |
