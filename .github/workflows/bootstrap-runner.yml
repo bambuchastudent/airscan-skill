@@ -189,3 +189,51 @@ jobs:
           # supported build command rather than pretending bare javac is sufficient.
           dafny build --target:java formal/bootstrap/BootstrapGate.dfy
           find formal/bootstrap -type f -name '*.jar' -print
+
+  graphify-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+      - name: Build Graphify CLI
+        run: |
+          git clone --depth 1 https://github.com/SaShakib/Graphify.git /tmp/graphify-src
+          git -C /tmp/graphify-src rev-parse HEAD | tee graphify-version.txt
+          (cd /tmp/graphify-src && go build -o /tmp/graphify ./cmd/graphify)
+      - name: Build graph and inspect BootstrapResource
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p graphify-evidence
+          /tmp/graphify parse "$PWD" 2>&1 | tee graphify-evidence/parse.log
+          test -s .graphify/graph.db
+          python3 - <<'PY'
+          import sqlite3, json
+          db=sqlite3.connect('.graphify/graph.db')
+          tables=[r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'")]
+          report={'tables':tables,'matching_rows':{}}
+          for table in tables:
+              cols=[r[1] for r in db.execute('PRAGMA table_info("'+table.replace('"','""')+'")')]
+              matches=[]
+              for col in cols:
+                  if col.lower() in ('name','qualified_name','symbol_name','path','file_path'):
+                      sql='SELECT * FROM "'+table.replace('"','""')+'" WHERE CAST("'+col.replace('"','""')+'" AS TEXT) LIKE ? LIMIT 20'
+                      matches.extend([str(x) for x in db.execute(sql,('%BootstrapResource%',))])
+              if matches: report['matching_rows'][table]=matches
+          print(json.dumps(report,indent=2))
+          with open('graphify-evidence/symbol-search.json','w') as out: json.dump(report,out,indent=2)
+          assert report['matching_rows'], 'Graph has no BootstrapResource symbol'
+          PY
+          cp .graphify/graph.db graphify-evidence/graph.db
+          mv graphify-version.txt graphify-evidence/version.txt
+      - name: Upload Graphify evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: graphify-bootstrap-evidence
+          path: graphify-evidence/
+          retention-days: 14
+          if-no-files-found: warn
