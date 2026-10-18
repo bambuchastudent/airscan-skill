@@ -122,3 +122,9 @@ VERIFIED: GitHub create_tree/create_commit/update_ref succeeded for mode 100755.
 ## 2026-10-18 — fail-closed test report gate
 
 Commit d2bce65196b39fb7280ed1d7ebd1ef84fcacc2de. GitHub Actions now parses Surefire XML after `./mvnw clean verify` and rejects absent, skipped or failing tests; requires at least 3 Quarkus tests and 1 worker test. Background Quarkus/LogManager error signature check was extended. VERIFIED: CI workflow source changed. NOT VERIFIED: CI execution and runtime results; no run ID/log observed. Maven Wrapper is still custom and formal/semantic gates remain pending. No OpenSpec task checkbox updated.
+
+## 2026-10-18 — Apache Maven Wrapper replacement
+
+Commits 7294a66, 7218a8b, 7b31ad7, cef5c4d. Replaced custom `mvnw` with the upstream Apache Maven Wrapper shell script and added upstream `mvnw.cmd`, sourced from apache/maven-wrapper master at implementation time. Git tree explicitly records mode 100755 for `mvnw`. Maven 3.9.11 distribution remains configured in `.mvn/wrapper/maven-wrapper.properties`.
+
+VERIFIED: GitHub file writes and Git tree mode change succeeded. NOT VERIFIED: runtime `./mvnw -version`, Spotless, Maven/Quarkus/worker tests or GitHub Actions logs. Do not mark bootstrap ready.
