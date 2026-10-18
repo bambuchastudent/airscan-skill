@@ -189,6 +189,8 @@ jobs:
           # supported build command rather than pretending bare javac is sufficient.
           dafny build --target:java formal/bootstrap/BootstrapGate.dfy
           find formal/bootstrap -type f -name '*.jar' -print
+      - name: Execute generated Dafny Java
+        run: dafny run --target:java formal/bootstrap/BootstrapGate.dfy
 
   java-symbol-smoke:
     runs-on: ubuntu-24.04
