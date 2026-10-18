@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.airscan.application.port.ArchiveReference;
+
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,6 +16,7 @@ import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -74,7 +77,7 @@ class LocalGzipObservationArchiveTest {
     var start = new CountDownLatch(1);
     var executor = Executors.newFixedThreadPool(4);
     try {
-      var writers = new ArrayList<java.util.concurrent.Future<dev.airscan.application.port.ArchiveReference>>();
+      var writers = new ArrayList<Future<ArchiveReference>>();
       for (int i = 0; i < 4; i++) {
         writers.add(
             executor.submit(
