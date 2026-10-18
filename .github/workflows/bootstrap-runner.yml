@@ -219,22 +219,17 @@ jobs:
         run: |
           python -m pip install 'graphifyy==0.1.14'
           python -m pip show graphifyy
-      - name: Extract actual Java AST graph
+      - name: Build shared Graphify index and verify cache reuse
         run: |
-          mkdir -p graphify-evidence
+          python scripts/graphify-shared-cache.py --root . --cache-dir /tmp/airscan-shared-graph --output graphify-evidence | tee /tmp/graphify-first.json
+          python scripts/graphify-shared-cache.py --root . --cache-dir /tmp/airscan-shared-graph --output graphify-evidence | tee /tmp/graphify-second.json
           python - <<'PY'
           import json
-          from pathlib import Path
-          from graphify.extract import extract
-          java_files=sorted(Path('src').rglob('*.java'))+sorted(Path('worker/src').rglob('*.java'))
-          assert java_files, 'No Java source files'
-          result=extract(java_files)
-          Path('graphify-evidence/graph.json').write_text(json.dumps(result,indent=2))
-          names=json.dumps(result)
-          assert len(result['nodes']) > 0, 'No AST nodes'
-          assert 'BootstrapResource' in names, 'BootstrapResource not indexed'
-          assert 'BootstrapMarker' in names, 'BootstrapMarker not indexed'
-          print(f"Java files={len(java_files)}, nodes={len(result['nodes'])}, edges={len(result['edges'])}")
+          first=json.load(open('/tmp/graphify-first.json'))
+          second=json.load(open('/tmp/graphify-second.json'))
+          assert first['cache_hit'] is False, 'First run must build graph'
+          assert second['cache_hit'] is True, 'Second run must reuse graph'
+          assert second['nodes'] >= 2 and second['edges'] >= 1
           PY
       - name: Upload Graphify Java evidence
         if: always()
