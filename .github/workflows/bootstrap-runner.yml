@@ -285,18 +285,23 @@ jobs:
         run: |
           kotlin scripts/graphify-shared-cache.main.kts --root . --cache-dir /tmp/airscan-shared-graph --output graphify-evidence | tee /tmp/graphify-first.json
           kotlin scripts/graphify-shared-cache.main.kts --root . --cache-dir /tmp/airscan-shared-graph --output graphify-evidence | tee /tmp/graphify-second.json
+          # A Java source mutation must invalidate the whole graph (no per-file delta claim).
+          printf '\\n// graphify cache invalidation smoke\\n' >> src/main/java/dev/airscan/bootstrap/BootstrapMarker.java
+          kotlin scripts/graphify-shared-cache.main.kts --root . --cache-dir /tmp/airscan-shared-graph --output graphify-evidence | tee /tmp/graphify-changed.json
           python - <<'PY'
           import json
           first=json.load(open('/tmp/graphify-first.json'))
           second=json.load(open('/tmp/graphify-second.json'))
+          changed=json.load(open('/tmp/graphify-changed.json'))
           assert first['cache_hit'] is False, 'First run must build graph'
           assert second['cache_hit'] is True, 'Second run must reuse graph'
+          assert changed['cache_hit'] is False, 'Changed Java input must invalidate graph'
           assert second['nodes'] >= 2 and second['edges'] >= 1
           relationship=json.load(open('graphify-evidence/relationship.json'))
           assert relationship['pass'] and relationship['matched_edges'], 'Graphify relationship query failed'
           print('Graphify version:', second['version'])
           print('Graphify relationship:', relationship)
-          print('Graphify cache cold/warm:', first['cache_hit'], second['cache_hit'])
+          print('Graphify cache cold/warm/changed:', first['cache_hit'], second['cache_hit'], changed['cache_hit'])
           PY
       - name: Upload Graphify Java evidence
         if: always()
