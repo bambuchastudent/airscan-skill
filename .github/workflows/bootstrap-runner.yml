@@ -250,3 +250,35 @@ jobs:
           path: graphify-evidence/
           retention-days: 14
           if-no-files-found: warn
+
+  serena-java:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+      - name: Install Kotlin scripting runtime
+        run: |
+          curl -fsSL -o /tmp/kotlin-compiler.zip https://github.com/JetBrains/kotlin/releases/download/v2.2.21/kotlin-compiler-2.2.21.zip
+          unzip -q /tmp/kotlin-compiler.zip -d /tmp/kotlin-runtime
+          echo "/tmp/kotlin-runtime/kotlinc/bin" >> "$GITHUB_PATH"
+      - name: Install Serena and MCP client
+        run: |
+          python -m pip install 'git+https://github.com/oraios/serena.git' 'mcp>=1.0,<2'
+          serena --version
+      - name: Verify Java semantic references
+        run: kotlin scripts/serena-semantic-smoke.main.kts
+      - name: Upload Serena evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: serena-java-semantic-evidence
+          path: serena-evidence/
+          retention-days: 14
+          if-no-files-found: warn
