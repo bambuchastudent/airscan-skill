@@ -124,3 +124,12 @@ Bootstrap formatting update: Spotless 2.43.0 with google-java-format 1.25.2 and 
 Follow-up 2026-10-18: Java sources/tests were adjusted toward Spotless Google format; GitHub CI now attempts independent worker main execution and a tracked-runtime-file/credential filename check. These changes have NOT been verified on a Java 25 CI run. Local runtime is Java 21.0.12.1, Maven absent, external Maven Central DNS unavailable. No current Actions run ID or log was retrievable. Bootstrap remains NEEDS_CHANGES.
 
 2026-10-18 priority remediation: Spotless 2.46.1 / google-java-format 1.28.0, Quarkus quarkus-junit, Surefire @{argLine}, LogManager property, Maven launcher version sourced from properties, executable Git mode 100755. All CI results remain NOT VERIFIED, and launcher is not yet upstream Maven Wrapper. Bootstrap NEEDS_CHANGES.
+
+## Current verified bootstrap snapshot — 2026-10-18 (supersedes older unverified notes above)
+
+- PR #1 branch `ci/bootstrap-audit-gates` remains unmerged; only active change is `bootstrap-agentic-foundation`. Do not start product features.
+- Java 25 / Quarkus 3.40.1 / Maven Wrapper 3.9.11, OpenSpec, Spotless, Checkstyle, worker tests, Alloy, TLC, Graphify Java AST and Kotlin shared cache, Dafny verification/build/Java execution passed CI [39124094544](https://github.com/bambuchastudent/airscan-skill/actions/runs/39124094544) at `d2bc2b9c8293ca616f2a0f9a12f50b17d14bff56`.
+- Graphify uses `graphifyy==0.1.14` via `scripts/graphify-shared-cache.main.kts`; unchanged inputs reuse the cache, changed inputs rebuild the whole AST graph. A shared `--cache-dir` is necessary for agents in distinct worktrees.
+- Serena MCP Java semantic lookup is NOT verified: latest completed CI [39124470305](https://github.com/bambuchastudent/airscan-skill/actions/runs/39124470305) failed on unsupported CLI `--headless`; fix `8a6a272` is pending CI confirmation.
+- Canonical plan and completion checkboxes: `openspec/changes/bootstrap-agentic-foundation/tasks.md`. Chronological evidence: `docs/agent/WORKLOG.md`. This file is curated current state; historical NOT VERIFIED statements above refer to older commits, not this snapshot.
+- Gate: NEEDS_CHANGES pending Serena, complete final SHA CI, iteration evidence and independent review.
