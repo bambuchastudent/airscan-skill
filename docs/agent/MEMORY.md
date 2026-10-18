@@ -133,3 +133,7 @@ Follow-up 2026-10-18: Java sources/tests were adjusted toward Spotless Google fo
 - Serena MCP Java semantic lookup is NOT verified: latest completed CI [39124470305](https://github.com/bambuchastudent/airscan-skill/actions/runs/39124470305) failed on unsupported CLI `--headless`; fix `8a6a272` is pending CI confirmation.
 - Canonical plan and completion checkboxes: `openspec/changes/bootstrap-agentic-foundation/tasks.md`. Chronological evidence: `docs/agent/WORKLOG.md`. This file is curated current state; historical NOT VERIFIED statements above refer to older commits, not this snapshot.
 - Gate: NEEDS_CHANGES pending Serena, complete final SHA CI, iteration evidence and independent review.
+
+## Latest verified snapshot (2026-10-18; supersedes prior Serena pending state)
+
+Eight of eight CI jobs passed at `733714ab675ac744bf5ec1fb46c76dffb0bbd44f`, run 39124935556, including Serena MCP Java symbol/reference lookup. PR #1 is not merged. OpenSpec tasks are canonical. Final commit CI and independent audit remain outstanding. Serena dependency is unpinned upstream Git main; Graphify cache is not per-file incremental. Status NEEDS_CHANGES pending review.
