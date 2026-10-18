@@ -257,3 +257,41 @@ not a claim that this documentation closeout commit has already passed CI.
 
 **Next:** review narrow Iteration 1 PR independently. Do not merge/mark
 change complete/archive or begin Iteration 2 before that review.
+
+## 2026-10-18T15:52Z — distributed-control-plane Iteration 2 persistence
+
+**Actor:** ChatGPT implementation orchestrator; independent external review not yet performed.
+**Change/tasks:** `add-distributed-control-plane` 2.1–2.3; 5.3 iteration evidence partial.
+**Precondition:** user-attested independent Iteration 1 PASS; PR #3 was found unmerged, made ready and merged at `4e82c92b8c6cd1f4716207c4ac18c4ef189c404e`. Base `develop` verified at that SHA; dedicated branch `feat/add-distributed-control-plane-iteration-2` and draft PR #4.
+**Verified code SHA:** `59012715f26c0957366b6d6b22f108632f480a84`.
+**Verified CI:** [39142302544](https://github.com/bambuchastudent/airscan-skill/actions/runs/39142302544) — **9/9 PASS**.
+
+**Changed at code SHA:** `CentralOperationalStore` port + `CentralRecordService` UUID synthetic record identity, Firestore SDK adapter and **mandatory emulator integration test**. Worker-only SQLite schema v1/WAL/FULL sync/5000ms busy timeout outbox, stable batch id and restart/retry/acceptance JUnit test. `ObservationArchive` port, SHA-256 and gzip content-addressed local immutable archive test adapter with source/batch/key/size/compression provenance. `pom.xml`, `worker/pom.xml`, `.gitignore` and `.github/workflows/bootstrap-runner.yml` updated. No worker HTTP/identity verifier, route/fare, cloud deployment or GCS production adapter.
+
+**Exact observed commands/checks at verified code SHA `59012715...`:**
+
+- `./mvnw -B -ntp spotless:check` — **PASS**.
+- `./mvnw -B -ntp checkstyle:check` — **PASS**.
+- `./mvnw -B -ntp clean verify` — **PASS**, 9 root JUnit tests, 0 failed/error/skipped; includes real REST/OpenAPI, MCP parity, central in-memory fake and archive immutability tests.
+- `./mvnw -B -ntp -f worker/pom.xml clean verify` — **PASS**, 2 worker JUnit tests, 0 failed/error/skipped; close/reopen and accepted-state durability exercised.
+- `./mvnw -B -ntp -f worker/pom.xml dependency:tree -DoutputFile=worker-dependencies.txt` plus grep for `google-cloud-firestore|google-cloud-storage|firebase-admin` — **PASS**, none present. Worker executable smoke PASS.
+- `gcloud emulators firestore start --database-mode=firestore-native --host-port=127.0.0.1:8085` — **PASS**, actual process reached socket readiness in separate CI job; Cloud SDK pinned `550.0.0` with `cloud-firestore-emulator` component. `FIRESTORE_EMULATOR_HOST=127.0.0.1:8085`, synthetic `AIRSCAN_TEST_PROJECT_ID=airscan-emulator-it`; no Google credentials.
+- `./mvnw -B -ntp -Pfirestore-emulator verify` — **PASS**, 9 root unit tests + exactly 1 **mandatory** Failsafe `FirestoreCentralOperationalStoreIT`, 0 failures/errors/skips. Real emulator write/read, close, new client/read PASSED. Failsafe report existence and no-skips asserted in CI.
+- `openspec validate --archived --strict` — **PASS**; `openspec validate --changes --strict` — **PASS**.
+- `kotlin scripts/graphify-shared-cache.main.kts --root . --cache-dir /tmp/airscan-shared-graph --output graphify-evidence` — **PASS** (Graphify `0.9.92`); baseline extracted REST/MCP shared-service calls. Explicit persistence symbol/edge checks added in documentation closeout; their execution requires final CI.
+- `kotlin scripts/serena-semantic-smoke.main.kts` — **PASS**, immutable Serena `d9e4c796fae0207ba6848d1df4b331122a5567b5`; baseline semantic symbols/references. Explicit persistence reference checks added in closeout; verify on final CI.
+- Java symbol smoke, existing Alloy 6.2.0, TLC 1.8.0, Dafny 4.11.0 gates — **PASS**; no new lease/snapshot model was introduced.
+- Tracked secret/runtime file check (`git ls-files | grep -Ei ...`) — **PASS**.
+
+**Failures/remediation (must not report as passes):**
+- `8002bc39...` / CI [39141914181](https://github.com/bambuchastudent/airscan-skill/actions/runs/39141914181): Spotless **FAILED** (3 formatting findings) and superseded run cancelled.
+- `5d98778d...` / CI [39141997607](https://github.com/bambuchastudent/airscan-skill/actions/runs/39141997607): superseded/cancelled.
+- `a56514a5...` / CI [39142124509](https://github.com/bambuchastudent/airscan-skill/actions/runs/39142124509): main regression **PASS**, emulator **FAILED** because `FirestoreOptions.getService()` cached an already-closed client. Fixed by constructing fresh options before reopening.
+- `59012715...` / CI `39142302544` **9/9 PASS**, emulator integration test genuinely executed and passed.
+
+**Versions:** Java 25 Temurin, Maven Wrapper 3.9.11, Quarkus 3.40.1, Google Firestore Java client 3.49.0, SQLite JDBC 3.53.4.0, gcloud CLI 550.0.0, OpenSpec 1.14.0, Graphify 0.9.92 and pinned Serena, Alloy 6.2.0, TLC 1.8.0, Dafny 4.11.0.
+
+**Limits:** Firestore emulator is in-memory and does not prove production transaction/index behavior; local archive is *not* Cloud Storage GCS SDK adapter. Worker SQLite only stores synthetic batches: no HTTP, lease, heartbeat or central ingestion. No cloud credentials were used. Local assistant container Java 21 cannot run Java 25 Maven suite or fetch GitHub due unavailable DNS; all PASS evidence is from linked GitHub CI.
+
+**Current closeout:** this WORKLOG entry, durable MEMORY, marked OpenSpec 2.1–2.3 and iteration report are part of the documentation-only code review closeout; green CI for this **new** commit must be observed before independent review.
+**Next:** independent external review of Iteration 2 only; do not merge PR #4 or start Iteration 3 without reviewer PASS.

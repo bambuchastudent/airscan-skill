@@ -116,10 +116,37 @@ print(json.dumps(result))
                 check(applicationEdges.any {
                     it["source"]?.jsonPrimitive?.content?.lowercase()?.contains("mcpcapabilitiesadapter") == true
                 }) { "Graphify: MCP adapter -> CapabilitiesService.current call not found" }
+                // Iteration 2 graph inspection: persistence symbols and real
+                // new-method call edges must be present in the extracted AST graph.
+                val persistenceSymbols = listOf(
+                    "CentralOperationalStore", "CentralRecordService",
+                    "FirestoreCentralOperationalStore", "ObservationArchive",
+                    "LocalGzipObservationArchive", "SqliteOutbox")
+                for (symbol in persistenceSymbols) {
+                    check(output.contains(symbol)) { "Graphify missing persistence symbol: $symbol" }
+                }
+                val persistenceEdges = relationships.filter { edge ->
+                    val source = edge["source"]?.jsonPrimitive?.content?.lowercase() ?: ""
+                    edge["relation"]?.jsonPrimitive?.content == "calls" &&
+                        (source.contains("centralrecordservice") ||
+                            source.contains("sqliteoutbox") ||
+                            source.contains("localgzipobservationarchive"))
+                }
+                check(persistenceEdges.any {
+                    it["source"]?.jsonPrimitive?.content?.lowercase()?.contains("centralrecordservice") == true
+                }) { "Graphify missing application persistence call edge" }
+                check(persistenceEdges.any {
+                    it["source"]?.jsonPrimitive?.content?.lowercase()?.contains("sqliteoutbox") == true
+                }) { "Graphify missing SQLite outbox call edge" }
+                check(persistenceEdges.any {
+                    it["source"]?.jsonPrimitive?.content?.lowercase()?.contains("localgzipobservationarchive") == true
+                }) { "Graphify missing local archive call edge" }
                 val relationshipEvidence = buildJsonObject {
                     put("query", "status() -> status() (distinct Graphify graph nodes)")
                     put("matched_edges", JsonArray(related))
                     put("application_service_edges", JsonArray(applicationEdges))
+                    put("persistence_symbols", JsonArray(persistenceSymbols.map { JsonPrimitive(it) }))
+                    put("persistence_edges", JsonArray(persistenceEdges))
                     put("pass", true)
                 }
                 writeAtomic(cache.resolve("relationship.json"), relationshipEvidence.toString())

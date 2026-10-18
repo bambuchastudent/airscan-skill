@@ -4,7 +4,7 @@ This file is the curated durable memory for agents working on this repository. K
 
 ## Current state
 
-- Bootstrap is complete and merged. `add-distributed-control-plane` Iteration 1 is implemented in draft PR #3, code HEAD `0dc8b112f62593d49ee77242e62affa5fb155f25`; CI `39137373107` 8/8 PASS. External independent review remains pending; Iteration 2 is not authorized.
+- Bootstrap is complete and merged. `add-distributed-control-plane` Iteration 1 was accepted by external review and PR #3 merged as `4e82c92b8c6cd1f4716207c4ac18c4ef189c404e`. Iteration 2 persistence implementation is in draft PR #4, verified code SHA `59012715f26c0957366b6d6b22f108632f480a84`, CI `39142302544` 9/9 PASS; Iteration 2 external review remains pending. No Iteration 3.
 - Default branch: `develop`.
 - Production implementation language: Java, not Python.
 - Verified runtime baseline: Java 25 Temurin 25.0.4.1, Maven Wrapper 3.9.11, Quarkus 3.40.1.
@@ -83,7 +83,7 @@ Active dependency order:
 2. `add-route-topology`
 3. `add-durable-scan-retention`
 
-Current review gate: `add-distributed-control-plane` Iteration 1 only; no Iteration 2 until independent review. Do not mass-implement airline adapters before the first provider architecture and scan semantics are validated.
+Current review gate: `add-distributed-control-plane` Iteration 2 only; no Iteration 3 until independent review. Do not mass-implement airline adapters before the first provider architecture and scan semantics are validated.
 
 ## Current invariant areas
 
@@ -119,7 +119,7 @@ Initial invariant families:
 
 Earlier CI failures, unverified tool statuses, Serena CLI incompatibility and mutable upstream dependency were resolved before CI 39126546579. For chronological evidence consult `docs/agent/WORKLOG.md`. This curated memory intentionally omits superseded state.
 
-## Distributed control plane — Iteration 1 review candidate (2026-10-18)
+## Distributed control plane — accepted Iteration 1 (2026-10-18)
 
 - Existing artifacts remain root Quarkus (application/REST/MCP dispatch) and independent `worker/` plain Java; no shared Maven module until a real worker protocol requires one.
 - `CapabilitiesService.current()` returns a domain-neutral `CapabilitiesSnapshot`; REST `GET /api/v1/capabilities` and in-process `McpCapabilitiesAdapter` both invoke this same service. MCP JSON-RPC transport is **not** deployed.
@@ -127,4 +127,13 @@ Earlier CI failures, unverified tool statuses, Serena CLI incompatibility and mu
 - Graphify `calls` edges confirm REST/MCP to application service; Serena Java symbols/references confirm both uses. Verified details in WORKLOG and iteration report.
 - Worker auth is **design-only**: scoped local/dev token first; future Cloud Run Job OIDC verifier. Worker/job/lease/batch identities are specified direction, not implemented protocol.
 - 1.1, 1.2, 1.3 and synthetic 5.2 boundary verified; 3.3 design and 5.3 iteration-level verification partial for the broader change.
-- PR #3 remains a draft. External independent review and Iteration 1 acceptance are pending; do not proceed to persistence/Iteration 2 automatically.
+- PR #3 merged after user-confirmed independent PASS. Iteration 2 development is on PR #4 and is not merged.
+
+## Distributed control plane — Iteration 2 persistence review candidate (2026-10-18)
+
+- Application-only `CentralOperationalStore` and `CentralRecordService` own UUID synthetic identities; Firestore adapter lives in `adapter/firestore` and is never present in worker dependencies. No new REST/MCP write endpoints.
+- Firestore native-mode emulator integration test uses a synthetic project, emulator host and fresh SDK client, no real Google credentials; **PASS** in CI `39142302544`. Production Firestore client injection/deployment remains deferred.
+- Worker-only SQLite `SqliteOutbox` uses schema v1, WAL, 5000ms busy timeout and FULL sync, with stable `batchId`, payload, creation time and PENDING/ACCEPTED states. Crash/reopen and acceptance test PASS.
+- Pure `ObservationArchive` port with local gzip/SHA-256 immutable adapter. Same payload returns same reference without overwriting; changed content gets a distinct key. Tests PASS; **no actual GCS SDK adapter yet**, see Iteration 2 report.
+- OpenSpec 2.1–2.3 verified at code SHA `59012715...`; final documentation/Graphify/Serena closeout requires its own green CI. Task 5.3 stays open for full change.
+- No lease, heartbeat, worker submission/auth, scheduler, deployment, providers or new formal state machine. Iteration 3 requires independent external review PASS of Iteration 2 first.
