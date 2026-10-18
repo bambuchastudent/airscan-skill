@@ -260,14 +260,18 @@ Before changing a pinned version, create an explicit small change or dependency 
 The canonical runtime is GitHub Actions `ubuntu-24.04` + `actions/setup-java@v5` Temurin 25. Record `java -version` and the actual patch release for each run. Quarkus is pinned to 3.40.1 in the control-plane POM. The worker is intentionally a separate plain-Java Maven artifact, with no REST dependencies. This is a minimal process boundary, not a distributed protocol.
 
 ```sh
-bash mvnw -version
-bash mvnw -B -ntp spotless:check
-bash mvnw -B -ntp clean verify
-bash mvnw -B -ntp -f worker/pom.xml clean verify
+./mvnw -version
+./mvnw -B -ntp spotless:check
+./mvnw -B -ntp clean verify
+./mvnw -B -ntp -f worker/pom.xml clean verify
 openspec validate bootstrap-agentic-foundation --strict
 openspec validate --changes --strict
 ```
 
-`mvnw` currently uses a version-pinned, SHA-512-checked shell Maven 3.9.11 downloader; it is **not yet a standard Apache Maven Wrapper**. It must be invoked with `bash mvnw` until the executable bit and standard wrapper distribution are fixed. The CI Maven gate fails if its log contains `IllegalAccessError`, `NoClassDefFoundError`, or `Exception in thread`; this check supplements, never replaces, successful process exit and actual test results. Java 25 Surefire opens `java.base/java.lang` to unnamed modules for the JBoss Threads initialization path.
+`mvnw` currently uses a version-pinned, SHA-512-checked shell Maven 3.9.11 downloader; it is **not yet a standard Apache Maven Wrapper**. It must be invoked with `./mvnw` until the executable bit and standard wrapper distribution are fixed. The CI Maven gate fails if its log contains `IllegalAccessError`, `NoClassDefFoundError`, or `Exception in thread`; this check supplements, never replaces, successful process exit and actual test results. Java 25 Surefire opens `java.base/java.lang` to unnamed modules for the JBoss Threads initialization path.
 
 **Verification state:** commands are documented and CI configured, but current commits have no independently observed successful run. Graphify, Serena, Alloy, TLC and Dafny remain NOT VERIFIED and must not be reported PASS without versions, commands, and actual outputs.
+
+## 2026-10-18 wrapper/Quarkus remediation
+
+`mvnw` now has Git mode 100755 and reads the Maven 3.9.11 version from `.mvn/wrapper/maven-wrapper.properties` (one version source). **Caveat:** this remains a custom shell launcher, not the upstream Apache Maven Wrapper generated script. `./mvnw -version` has not been observed passing on CI. Spotless 2.46.1 and google-java-format 1.28.0 are pinned for Java 25 compatibility, pending runtime verification. Quarkus JUnit artifact is `quarkus-junit`, and Surefire uses `@{argLine}` plus `java.util.logging.manager` and `java.lang` opening. No `java.lang.invoke` opening has been added without evidence of necessity.
