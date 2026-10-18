@@ -27,6 +27,8 @@ class CapabilitiesResourceTest {
         .then()
         .statusCode(200)
         .contentType(containsString("json"))
-        .body("paths.'/api/v1/capabilities'.get.responses.'200'.content.'application/json'.schema", notNullValue());
+        .body(
+            "paths.'/api/v1/capabilities'.get.responses.'200'.content.'application/json'.schema",
+            notNullValue());
   }
 }
