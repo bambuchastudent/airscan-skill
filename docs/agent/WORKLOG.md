@@ -76,3 +76,13 @@ Append-only evidence log. Newest entries may be appended at the bottom. Do not u
 
 **Next step:**
 - implement/review `bootstrap-agentic-foundation` with revised runtime boundaries only; then apply `add-distributed-control-plane`.
+
+## 2026-10-18 — GitHub runner bootstrap and REST skeleton
+
+**Actor:** ChatGPT implementation assistant; **OpenSpec:** bootstrap-agentic-foundation, tasks 1.1–1.4, 4.1–4.4 (IN PROGRESS).
+
+**Observed verification:** GitHub Actions run https://github.com/bambuchastudent/airscan-skill/actions/runs/39113553968 for commit e9653c2: Java-and-contract PASS; OpenSpec PASS; Java Temurin 25.0.4.1, Maven 3.10.0; `openspec validate bootstrap-agentic-foundation --strict` PASS. `mvn verify` SKIPPED (pom.xml absent at that commit).
+
+**Subsequent changes (not yet verified):** Added Java 25 Quarkus 3.27.2 Maven POM, CDI marker/test, REST/OpenAPI extension, bootstrap-only REST resource/test, and .gitignore. Relevant commit range 1def41f..6718f66. The new Maven build and Quarkus tests have NOT been observed passing; CI must be inspected before any task is checked off. No worker protocol, fare search, cloud deployment, or formal smoke checks implemented.
+
+**Next:** inspect Actions runs for latest commit; fix any Maven failures; add explicit worker role only under bootstrap design; implement formal/tool smoke gates and complete review evidence.
