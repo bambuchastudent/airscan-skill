@@ -1,4 +1,4 @@
-module BootstrapGate {
+module GateLogic {
   function NormalizeDecision(passed: bool): int
     ensures NormalizeDecision(passed) == (if passed then 1 else 0)
   {
