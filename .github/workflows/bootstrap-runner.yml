@@ -188,4 +188,4 @@ jobs:
           # Dafny's Java backend needs its generated runtime library; compile via the
           # supported build command rather than pretending bare javac is sufficient.
           dafny build --target:java formal/bootstrap/BootstrapGate.dfy
-          find formal/bootstrap -type f \\( -name '*.jar' -o -name '*.class' \\) -print
+          find formal/bootstrap -type f -name '*.jar' -print
