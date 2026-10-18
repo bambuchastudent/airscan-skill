@@ -86,3 +86,17 @@ Append-only evidence log. Newest entries may be appended at the bottom. Do not u
 **Subsequent changes (not yet verified):** Added Java 25 Quarkus 3.27.2 Maven POM, CDI marker/test, REST/OpenAPI extension, bootstrap-only REST resource/test, and .gitignore. Relevant commit range 1def41f..6718f66. The new Maven build and Quarkus tests have NOT been observed passing; CI must be inspected before any task is checked off. No worker protocol, fare search, cloud deployment, or formal smoke checks implemented.
 
 **Next:** inspect Actions runs for latest commit; fix any Maven failures; add explicit worker role only under bootstrap design; implement formal/tool smoke gates and complete review evidence.
+
+## 2026-10-18 — independent audit remediation (incomplete)
+
+Actor: ChatGPT implementation; OpenSpec: bootstrap-agentic-foundation only.
+Baseline: d424d400c846f574a729d430f492b932396cd444.
+Changed commits: 8eb6204..cdc34bb; Quarkus 3.40.1 LTS, Surefire Java 25 add-opens, HTTP REST/OpenAPI tests, separate worker Maven artifact, Maven 3.9.11 launcher, GitHub CI hardening, iteration/review draft.
+
+Official source checks: Quarkus https://quarkus.io/releases/ recommends 3.40 LTS (3.40.1); https://quarkus.io/blog/quarkus-3-31-released/ identifies full Java 25 support starting 3.31; https://github.com/quarkusio/quarkus/issues/47769 explains JBoss Threads JVM option.
+
+VERIFIED (earlier commit only): Actions run 39113553968, Java Temurin 25.0.4.1, Maven 3.10.0, OpenSpec 1.14.0 strict bootstrap validation.
+NOT VERIFIED on new commits: `bash mvnw -B -ntp clean verify`, HTTP status, OpenAPI, worker Maven build, OpenSpec all changes, formatter/static, Graphify, Serena, Alloy, TLC, Dafny, secret scan.
+FAILED (audit baseline): background IllegalAccessError/NoClassDefFoundError despite false-green Maven; no new run yet to demonstrate fix.
+No task checkboxes checked. CI run URL for new commits: not yet available/observed.
+Next: obtain latest run, correct errors, finish missing smoke gates and evidence. Status NEEDS_CHANGES.
