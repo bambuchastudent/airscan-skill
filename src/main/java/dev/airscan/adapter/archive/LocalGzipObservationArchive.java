@@ -2,7 +2,6 @@ package dev.airscan.adapter.archive;
 
 import dev.airscan.application.port.ArchiveReference;
 import dev.airscan.application.port.ObservationArchive;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

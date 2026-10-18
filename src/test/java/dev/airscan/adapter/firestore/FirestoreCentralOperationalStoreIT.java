@@ -22,8 +22,7 @@ class FirestoreCentralOperationalStoreIT {
     String uniqueLabel = "test-" + UUID.randomUUID();
     String id;
     try (var firstClient = options.getService()) {
-      var application =
-          new CentralRecordService(new FirestoreCentralOperationalStore(firstClient));
+      var application = new CentralRecordService(new FirestoreCentralOperationalStore(firstClient));
       var record = application.createSynthetic(uniqueLabel);
       id = record.recordId();
       assertEquals(record, application.find(id).orElseThrow());

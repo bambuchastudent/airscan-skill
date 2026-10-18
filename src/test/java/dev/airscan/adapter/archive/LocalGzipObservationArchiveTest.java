@@ -32,7 +32,9 @@ class LocalGzipObservationArchiveTest {
     assertTrue(first.compressedBytes() > 0);
     assertEquals(64, first.sha256().length());
 
-    var changed = archive.archive("synthetic-source", "batch-1", "{\"value\":2}".getBytes(StandardCharsets.UTF_8));
+    var changed =
+        archive.archive(
+            "synthetic-source", "batch-1", "{\"value\":2}".getBytes(StandardCharsets.UTF_8));
     assertNotEquals(first.objectKey(), changed.objectKey());
     assertArrayEquals(original, archive.read(first));
     assertThrows(IllegalArgumentException.class, () -> archive.archive("", "batch-1", original));
