@@ -1,0 +1,16 @@
+target/
+**/target/
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+.env
+.env.*
+!.env.example
+**/service-account*.json
+**/*credentials*.json
+.firebase/
+.serena/cache/
+.graphify/
+node_modules/
+.DS_Store
