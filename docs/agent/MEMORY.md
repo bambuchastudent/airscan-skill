@@ -114,3 +114,7 @@ Apply and verify `bootstrap-agentic-foundation` only. Its structure must preserv
 ## Bootstrap implementation update (2026-10-18)
 
 GitHub Actions on ubuntu-24.04 is the canonical verification environment. Run 39113553968 verified Java 25, Maven 3.10.0 and strict OpenSpec validation. Maven `verify` was skipped because the project did not yet have a POM. A subsequent series of commits added a Quarkus 3.27.2 POM, CDI bootstrap marker, REST/OpenAPI dependency, bootstrap status endpoint and tests. Those later commits have **no observed build/test evidence yet**. No production capability or worker protocol is implemented. Graphify, Serena, Alloy, TLC, and Dafny are pending. Continue bootstrap only; review GitHub Actions before reporting PASS.
+
+## 2026-10-18 remediation status
+
+Independent audit identified false-green Quarkus background runtime exceptions on Java 25. Quarkus upgraded from 3.27.2 to supported 3.40.1 LTS; Surefire receives --add-opens java.base/java.lang=ALL-UNNAMED. Real REST/OpenAPI HTTP tests and a separate no-REST worker Maven entrypoint were added. Maven 3.9.11 shell launcher and CI exception detection added. **None of these changes has yet been verified by a completed new Actions run.** Earlier CI 39113553968 verifies Java environment/OpenSpec only. Formatting, Graphify, Serena, Alloy, TLC, Dafny remain NOT VERIFIED. Bootstrap status NEEDS_CHANGES; no downstream change started.
