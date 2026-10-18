@@ -184,7 +184,7 @@ jobs:
           dafny translate java formal/bootstrap/BootstrapGate.dfy --output /tmp/dafny-java/BootstrapGate.java
           find /tmp/dafny-java -type f | sort
           test -s /tmp/dafny-java/BootstrapGate-java/BootstrapGate.java
-          test -s /tmp/dafny-java/BootstrapGate-java/BootstrapGate/__default.java
+          test -s /tmp/dafny-java/BootstrapGate-java/GateLogic/__default.java
           # Dafny's Java backend needs its generated runtime library; compile via the
           # supported build command rather than pretending bare javac is sufficient.
           dafny build --target:java formal/bootstrap/BootstrapGate.dfy
