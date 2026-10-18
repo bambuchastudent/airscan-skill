@@ -20,11 +20,15 @@ jobs:
         with:
           distribution: temurin
           java-version: '25'
+      - name: Verify wrapper executable mode
+        run: |
+          test -x ./mvnw
+          test "$(git ls-files --stage mvnw | awk '{print $1}')" = 100755
       - name: Runtime versions
         run: |
           java -version
           javac -version
-          bash mvnw -version
+          ./mvnw -version
       - name: Bootstrap contracts
         run: |
           test -s AGENTS.md
@@ -33,18 +37,18 @@ jobs:
           test -s openspec/config.yaml
           test -s openspec/changes/bootstrap-agentic-foundation/tasks.md
       - name: Deterministic Java formatting check
-        run: bash mvnw -B -ntp spotless:check
+        run: ./mvnw -B -ntp spotless:check
       - name: Maven verification and Quarkus HTTP tests
         shell: bash
         run: |
           set -euo pipefail
-          bash mvnw -B -ntp clean verify 2>&1 | tee maven-verify.log
+          ./mvnw -B -ntp clean verify 2>&1 | tee maven-verify.log
           if grep -E 'IllegalAccessError|NoClassDefFoundError|Exception in thread' maven-verify.log; then
             echo 'BLOCKER: uncaught runtime exception in Maven/Quarkus logs' >&2
             exit 1
           fi
       - name: Independent worker bootstrap
-        run: bash mvnw -B -ntp -f worker/pom.xml clean verify
+        run: ./mvnw -B -ntp -f worker/pom.xml clean verify
       - name: Execute worker entrypoint
         shell: bash
         run: |
@@ -60,7 +64,7 @@ jobs:
             exit 1
           fi
       - name: Inspect worker dependencies
-        run: bash mvnw -B -ntp -f worker/pom.xml dependency:tree
+        run: ./mvnw -B -ntp -f worker/pom.xml dependency:tree
 
   openspec:
     runs-on: ubuntu-24.04
