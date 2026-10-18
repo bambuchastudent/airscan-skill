@@ -270,7 +270,7 @@ jobs:
           echo "/tmp/kotlin-runtime/kotlinc/bin" >> "$GITHUB_PATH"
       - name: Install Serena and MCP client
         run: |
-          python -m pip install 'git+https://github.com/oraios/serena.git' 'mcp>=1.0,<2'
+          python -m pip install 'git+https://github.com/oraios/serena.git'
           serena --version
       - name: Verify Java semantic references
         run: kotlin scripts/serena-semantic-smoke.main.kts
