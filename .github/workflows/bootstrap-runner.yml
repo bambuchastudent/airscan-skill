@@ -206,3 +206,41 @@ jobs:
           path: java-symbol-evidence/
           retention-days: 14
           if-no-files-found: warn
+
+  graphify-java:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Java-capable Graphify
+        run: |
+          python -m pip install 'graphifyy==0.1.14'
+          python -m pip show graphifyy
+      - name: Extract actual Java AST graph
+        run: |
+          mkdir -p graphify-evidence
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from graphify.extract import extract
+          java_files=sorted(Path('src').rglob('*.java'))+sorted(Path('worker/src').rglob('*.java'))
+          assert java_files, 'No Java source files'
+          result=extract(java_files)
+          Path('graphify-evidence/graph.json').write_text(json.dumps(result,indent=2))
+          names=json.dumps(result)
+          assert len(result['nodes']) > 0, 'No AST nodes'
+          assert 'BootstrapResource' in names, 'BootstrapResource not indexed'
+          assert 'BootstrapMarker' in names, 'BootstrapMarker not indexed'
+          print(f"Java files={len(java_files)}, nodes={len(result['nodes'])}, edges={len(result['edges'])}")
+          PY
+      - name: Upload Graphify Java evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: graphify-java-bootstrap-evidence
+          path: graphify-evidence/
+          retention-days: 14
+          if-no-files-found: warn
