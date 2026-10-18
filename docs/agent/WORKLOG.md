@@ -128,3 +128,7 @@ Commit d2bce65196b39fb7280ed1d7ebd1ef84fcacc2de. GitHub Actions now parses Suref
 Commits 7294a66, 7218a8b, 7b31ad7, cef5c4d. Replaced custom `mvnw` with the upstream Apache Maven Wrapper shell script and added upstream `mvnw.cmd`, sourced from apache/maven-wrapper master at implementation time. Git tree explicitly records mode 100755 for `mvnw`. Maven 3.9.11 distribution remains configured in `.mvn/wrapper/maven-wrapper.properties`.
 
 VERIFIED: GitHub file writes and Git tree mode change succeeded. NOT VERIFIED: runtime `./mvnw -version`, Spotless, Maven/Quarkus/worker tests or GitHub Actions logs. Do not mark bootstrap ready.
+
+## 2026-10-18 — CI execution evidence investigation
+
+Added an explicit CI step for wrapper distribution metadata and `./mvnw -version` at ddd3cb99a9901be8a39be234af29b26ad6fc6eb7. The GitHub connector `fetch_commit_workflow_runs` returned zero runs for 3f840c8, but this endpoint only returns pull-request-triggered runs; therefore this does **not** establish that push CI did not run. GitHub Actions public page could not be fetched in this environment. Local runner has OpenJDK 21.0.12.1, no `mvn`, and cannot resolve github.com; it is unsuitable for canonical Java 25 validation. Consequently no green CI run, runtime PASS, or final SHA evidence is claimed. Remaining work: obtain actual Actions push-run logs through a suitable GitHub Actions interface; remediate failures; only then proceed to formal/semantic evidence.
