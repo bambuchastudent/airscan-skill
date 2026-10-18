@@ -160,3 +160,26 @@ jobs:
         run: curl --fail --location --retry 3 --output /tmp/alloy.jar https://github.com/AlloyTools/org.alloytools.alloy/releases/download/v6.2.0/org.alloytools.alloy.dist.jar
       - name: Bounded Alloy checks
         run: java -jar /tmp/alloy.jar exec -c '*' -o /tmp/alloy-results formal/bootstrap/BootstrapGate.als
+
+  dafny-bootstrap:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+      - name: Install pinned Dafny
+        run: |
+          curl --fail --location --retry 3 --output /tmp/dafny.zip https://github.com/dafny-lang/dafny/releases/download/v4.11.0/dafny-4.11.0-x64-ubuntu-22.04.zip
+          unzip -q /tmp/dafny.zip -d /tmp/dafny-dist
+          find /tmp/dafny-dist -type f -name dafny -exec chmod +x {} \;
+          echo "$(dirname "$(find /tmp/dafny-dist -type f -name dafny | head -1)")" >> "$GITHUB_PATH"
+      - name: Verify Dafny bootstrap function
+        run: dafny verify formal/bootstrap/BootstrapGate.dfy
+      - name: Generate and compile Java from verified Dafny
+        run: |
+          mkdir -p /tmp/dafny-java
+          dafny translate java formal/bootstrap/BootstrapGate.dfy --output /tmp/dafny-java/BootstrapGate.java
+          find /tmp/dafny-java -type f | sort
