@@ -39,7 +39,7 @@ fun main(args: Array<String>) {
             .sorted().toList()
     }
     require(files.isNotEmpty()) { "No Java files" }
-    val version = "graphifyy-0.1.14-java-ast-v1"
+    val version = "graphifyy-0.9.92-java-ast-v2"
     val fingerprint = sha(buildString {
         append(version)
         for (file in files) {
@@ -63,7 +63,7 @@ from pathlib import Path
 from graphify.extract import extract
 root=Path(sys.argv[1])
 files=[root / name for name in sys.argv[2:]]
-result=extract(files)
+result=extract(files, root=root, parallel=False)
 assert result.get('nodes'), 'Empty graph'
 print(json.dumps(result))
 """.trimIndent()
@@ -76,6 +76,31 @@ print(json.dumps(result))
                 val nodes = result["nodes"]!!.jsonArray.size
                 val edges = result["edges"]!!.jsonArray.size
                 check(output.contains("BootstrapResource") && output.contains("BootstrapMarker"))
+                // Graphify's extracted edges, not merely text matches, must prove
+                // that BootstrapResource.status() calls BootstrapMarker.status().
+                val labels = result["nodes"]!!.jsonArray.associate {
+                    it.jsonObject["id"]!!.jsonPrimitive.content to
+                        (it.jsonObject["label"]?.jsonPrimitive?.content ?: "")
+                }
+                val relationships = result["edges"]!!.jsonArray.map { it.jsonObject }
+                val related = relationships.filter { edge ->
+                    val source = edge["source"]?.jsonPrimitive?.content ?: ""
+                    val target = edge["target"]?.jsonPrimitive?.content ?: ""
+                    val sourceLabel = labels[source] ?: source
+                    val targetLabel = labels[target] ?: target
+                    (sourceLabel.contains("status") || source.contains("status")) &&
+                    (targetLabel.contains("status") || target.contains("status")) &&
+                    source != target
+                }
+                check(related.isNotEmpty()) {
+                    "Graphify relationship missing: status() call between bootstrap symbols"
+                }
+                val relationshipEvidence = buildJsonObject {
+                    put("query", "status() -> status() (distinct Graphify graph nodes)")
+                    put("matched_edges", JsonArray(related))
+                    put("pass", true)
+                }
+                writeAtomic(cache.resolve("relationship.json"), relationshipEvidence.toString())
                 writeAtomic(graph, output)
                 val metadata = buildJsonObject {
                     put("version", version)
@@ -94,8 +119,10 @@ print(json.dumps(result))
                 Files.createDirectories(dest)
                 Files.copy(graph, dest.resolve("graph.json"), StandardCopyOption.REPLACE_EXISTING)
                 Files.copy(manifest, dest.resolve("manifest.json"), StandardCopyOption.REPLACE_EXISTING)
+                Files.copy(cache.resolve("relationship.json"), dest.resolve("relationship.json"), StandardCopyOption.REPLACE_EXISTING)
             }
             val report = Json.parseToJsonElement(Files.readString(manifest)).jsonObject
+            check(Files.exists(cache.resolve("relationship.json"))) { "Relationship evidence missing" }
             println(buildJsonObject {
                 put("cache_hit", hit)
                 put("cache_dir", cache.toString())
