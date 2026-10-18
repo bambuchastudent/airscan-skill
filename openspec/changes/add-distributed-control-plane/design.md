@@ -198,3 +198,39 @@ authorization decisions remain solely in the control plane.
 No worker lease, heartbeat, result ingestion, Firestore repository, SQLite outbox,
 Cloud Storage archive, Cloud Run deployment, Hosting, scheduling or travel-domain
 API is part of this iteration. No formal concurrency/state invariant is introduced.
+
+## Iteration 2 persistence decisions (2026-10-18)
+
+- The existing root Quarkus artifact owns `CentralOperationalStore` (application port),
+  `CentralRecordService` (server-generated UUID identity), and the Firestore adapter.
+  A tiny synthetic control record containing a bounded label proves create/read
+  without exposing any unauthenticated mutating REST or MCP endpoint.
+  The adapter accepts an explicitly supplied Firestore client. Production
+  credential/client wiring is intentionally deferred: Iteration 2 never performs
+  implicit ADC discovery at Quarkus startup.
+- Firestore emulator integration is opt-in via mandatory CI job and Maven
+  `-Pfirestore-emulator verify`. It exercises real Java SDK operations, creates
+  and reads a synthetic record, disposes the client, creates a new client,
+  and reads the same emulator-resident record without Google credentials.
+  Default Maven unit tests use only a fake port. No emulator skip-if-absent:
+  emulator test fails if environment variables or service are missing.
+  Emulator data is memory-only and the suite does not test production indexes
+  or transaction concurrency semantics.
+- Worker-only `SqliteOutbox`: schema version via `PRAGMA user_version=1`,
+  `batch_id` primary key, sanitized `payload`, `created_at` ISO timestamp,
+  `state` PENDING/ACCEPTED. `INSERT OR IGNORE` is followed by deterministic
+  payload/timestamp collision verification; the batch retry identity persists
+  over close/reopen. WAL, 5000ms busy timeout and synchronous FULL are local
+  durability choices. No worker HTTP, job/lease identity, or central authority.
+- `ObservationArchive` is a pure application port. A deterministic local
+  `LocalGzipObservationArchive` test adapter writes a tiny sanitized synthetic
+  batch to a SHA-256 content-addressed gzip path, with source and batch
+  identities also hashed into path components. CREATE_NEW forbids overwrites;
+  if an object already exists, decompression must match the requested bytes.
+  Its `ArchiveReference` retains source, batch, hash, object path, compression
+  and byte sizes. This is not a GCS client implementation; an authenticated
+  immutable Cloud Storage adapter is a later, separately verified concern.
+- No direct worker Firestore or Cloud Storage SDK dependency. A CI dependency
+  tree assertion enforces this. No lease/heartbeat/ingestion/auth/API addition.
+  Existing formal bootstrap invariants are untouched because no distributed
+  state machine or publication behavior is implemented.
