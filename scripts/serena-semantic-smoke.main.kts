@@ -19,7 +19,7 @@ async def main():
     root=str(Path.cwd())
     params=StdioServerParameters(command="serena",args=[
         "start-mcp-server","--project",root,"--agent-interface","tools",
-        "--transport","stdio","--headless","--disable-web-dashboard"])
+        "--transport","stdio"])
     async with stdio_client(params) as (reader,writer):
         async with ClientSession(reader,writer) as session:
             await session.initialize()
