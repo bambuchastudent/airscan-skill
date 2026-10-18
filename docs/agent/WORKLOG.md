@@ -132,3 +132,11 @@ VERIFIED: GitHub file writes and Git tree mode change succeeded. NOT VERIFIED: r
 ## 2026-10-18 — CI execution evidence investigation
 
 Added an explicit CI step for wrapper distribution metadata and `./mvnw -version` at ddd3cb99a9901be8a39be234af29b26ad6fc6eb7. The GitHub connector `fetch_commit_workflow_runs` returned zero runs for 3f840c8, but this endpoint only returns pull-request-triggered runs; therefore this does **not** establish that push CI did not run. GitHub Actions public page could not be fetched in this environment. Local runner has OpenJDK 21.0.12.1, no `mvn`, and cannot resolve github.com; it is unsuitable for canonical Java 25 validation. Consequently no green CI run, runtime PASS, or final SHA evidence is claimed. Remaining work: obtain actual Actions push-run logs through a suitable GitHub Actions interface; remediate failures; only then proceed to formal/semantic evidence.
+
+## 2026-10-18 — PR #1 reproducible CI and formal toolchain evidence
+
+Branch: `ci/bootstrap-audit-gates` (not merged); PR: https://github.com/bambuchastudent/airscan-skill/pull/1.
+
+VERIFIED: GitHub Actions run https://github.com/bambuchastudent/airscan-skill/actions/runs/39121502784 at commit `1360c01134e9ed4c91adaa8d41c0607fbe36e480` completed with five successful jobs: `java-and-contract`, `openspec`, `alloy-bootstrap`, `tlc-bootstrap`, `dafny-bootstrap`. The Java job includes Maven Wrapper, Spotless, Checkstyle, Java 25/Quarkus HTTP and worker tests. Formal smokes are deliberately tiny toolchain examples, not proofs of AirScan product invariants. Dafny verifies a pure bootstrap decision function and builds Java via `dafny build --target:java`.
+
+NOT VERIFIED: Graphify installed version, graph creation, impact lookup; Serena activation, symbol references and status lookup. Neither tool is exposed through the available connected execution interfaces. These checks require actual external tool sessions with recorded output, not inferred results. Also pending: explicit runtime smoke of generated Dafny Java, and final evidence snapshot tied to final PR SHA after all gates are resolved. Status: NEEDS_CHANGES; not ready for external review.
