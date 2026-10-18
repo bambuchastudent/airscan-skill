@@ -32,12 +32,19 @@ jobs:
           test -s formal/INVARIANTS.md
           test -s openspec/config.yaml
           test -s openspec/changes/bootstrap-agentic-foundation/tasks.md
-      - name: Maven verification
-        if: hashFiles('pom.xml') != ''
-        run: mvn -B -ntp verify
-      - name: No Maven project yet
-        if: hashFiles('pom.xml') == ''
-        run: echo 'NOT VERIFIED — pom.xml absent; Maven gate not executed'
+      - name: Maven verification and Quarkus HTTP tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash mvnw -B -ntp clean verify 2>&1 | tee maven-verify.log
+          if grep -E 'IllegalAccessError|NoClassDefFoundError|Exception in thread' maven-verify.log; then
+            echo 'BLOCKER: uncaught runtime exception in Maven/Quarkus logs' >&2
+            exit 1
+          fi
+      - name: Independent worker bootstrap
+        run: bash mvnw -B -ntp -f worker/pom.xml clean verify
+      - name: Inspect worker dependencies
+        run: bash mvnw -B -ntp -f worker/pom.xml dependency:tree
 
   openspec:
     runs-on: ubuntu-24.04
@@ -55,3 +62,5 @@ jobs:
           openspec validate --help
       - name: Validate bootstrap change
         run: openspec validate bootstrap-agentic-foundation --strict
+      - name: Validate all active changes
+        run: openspec validate --changes --strict
