@@ -43,12 +43,42 @@ jobs:
         run: |
           set -euo pipefail
           ./mvnw -B -ntp clean verify 2>&1 | tee maven-verify.log
-          if grep -E 'IllegalAccessError|NoClassDefFoundError|Exception in thread' maven-verify.log; then
+          if grep -E 'IllegalAccessError|NoClassDefFoundError|Exception in thread|Could not initialize class org.jboss.threads|LogManager was not properly installed' maven-verify.log; then
             echo 'BLOCKER: uncaught runtime exception in Maven/Quarkus logs' >&2
             exit 1
           fi
+      - name: Verify real Quarkus test results
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import glob, xml.etree.ElementTree as ET
+          reports = glob.glob('target/surefire-reports/TEST-*.xml')
+          assert reports, 'No Surefire XML reports: tests were not executed'
+          total = failures = errors = skipped = 0
+          for report in reports:
+              root = ET.parse(report).getroot()
+              total += int(root.attrib.get('tests', 0))
+              failures += int(root.attrib.get('failures', 0))
+              errors += int(root.attrib.get('errors', 0))
+              skipped += int(root.attrib.get('skipped', 0))
+          print(f'Quarkus tests={total}, failures={failures}, errors={errors}, skipped={skipped}')
+          assert total >= 3 and failures == errors == skipped == 0, 'Quarkus tests missing, skipped or failing'
+          PY
       - name: Independent worker bootstrap
         run: ./mvnw -B -ntp -f worker/pom.xml clean verify
+      - name: Verify worker test results
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import glob, xml.etree.ElementTree as ET
+          reports = glob.glob('worker/target/surefire-reports/TEST-*.xml')
+          assert reports, 'No worker Surefire XML reports'
+          results = [ET.parse(path).getroot() for path in reports]
+          tests = sum(int(r.attrib.get('tests', 0)) for r in results)
+          bad = sum(int(r.attrib.get(k, 0)) for r in results for k in ('failures', 'errors', 'skipped'))
+          print(f'Worker tests={tests}, failed/errors/skipped={bad}')
+          assert tests >= 1 and bad == 0
+          PY
       - name: Execute worker entrypoint
         shell: bash
         run: |
