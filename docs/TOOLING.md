@@ -257,13 +257,13 @@ Before changing a pinned version, create an explicit small change or dependency 
 
 ## Current verified bootstrap tooling — 2026-10-18
 
-Java 25 Temurin, Maven Wrapper 3.9.11, Quarkus 3.40.1, REST/OpenAPI, separate worker, Spotless and Checkstyle, OpenSpec 1.14.0, Alloy 6.2.0, TLC 1.8.0, Dafny 4.11.0 including generated Java execution, and Serena MCP semantic lookup are VERIFIED in CI [39126204822](https://github.com/bambuchastudent/airscan-skill/actions/runs/39126204822) at `b0bedbd93d6b14084033f1065352bdcf0a994e97`.
+Java 25 Temurin, Maven Wrapper 3.9.11, Quarkus 3.40.1, REST/OpenAPI, separate worker, Spotless and Checkstyle, OpenSpec 1.14.0, Alloy 6.2.0, TLC 1.8.0, Dafny 4.11.0 including generated Java execution, and Serena MCP semantic lookup are VERIFIED in CI [39126546579](https://github.com/bambuchastudent/airscan-skill/actions/runs/39126546579) at `ca8daf41ba7efe62b6287f19d9f4f2ca0bdfa0dd`.
 
 Serena is pinned to upstream commit `d9e4c796fae0207ba6848d1df4b331122a5567b5`. Install with `python -m pip install 'git+https://github.com/oraios/serena.git@d9e4c796fae0207ba6848d1df4b331122a5567b5'`; verify with `kotlin scripts/serena-semantic-smoke.main.kts`.
 
-Graphify upgrade **pending final CI verification**: pinned `graphifyy==0.9.92`, install with `python -m pip install 'graphifyy==0.9.92'`. Run `kotlin scripts/graphify-shared-cache.main.kts --root . --cache-dir /tmp/airscan-shared-graph --output graphify-evidence`. Expected: bootstrap symbols, extracted status-call relationship in `relationship.json`, cold cache false and warm cache true. Any changed Java input triggers a full AST rebuild, not per-file incremental updating. Do not claim Graphify 0.9.92 PASS before new CI proves it.
+Graphify **VERIFIED**: exact pin `graphifyy==0.9.92`, install `python -m pip install 'graphifyy==0.9.92'`. Graph command: `kotlin scripts/graphify-shared-cache.main.kts --root . --cache-dir /tmp/airscan-shared-graph --output graphify-evidence`. In CI [39126546579](https://github.com/bambuchastudent/airscan-skill/actions/runs/39126546579) at `ca8daf41ba7efe62b6287f19d9f4f2ca0bdfa0dd`, Graphify found 27 nodes, 47 edges, symbols `BootstrapResource` and `BootstrapMarker`, and extracted the `calls` relationship `BootstrapResource.status() -> BootstrapMarker.status()` (source `BootstrapResource.java:L17`, AST, INFERRED 0.85). Cold cache `false`, warm cache `true`, changed Java input `false` (correct invalidation). Full graph rebuild on changed Java source is accepted; **per-file incremental update is not implemented**.
 
-External independent reviewer reported PASS for previous HEAD, but second reviewer requested Graphify upgrade and current-state documentation reconciliation. **Bootstrap remains under remediation; do not merge or begin downstream changes** until new CI and final independent review.
+Final independent technical reviewer accepted implementation at `ca8daf41` and found only evidence/process gaps. Canonical review: `docs/reviews/bootstrap-agentic-foundation/2026-10-18T-final-review.md`. Evidence-closeout documentation is being committed; **CI on documentation-only HEAD and final metadata-only review remain pending**. No PR merge or downstream implementation until final PASS.
 
 ## Historical bootstrap remediation notes
 
