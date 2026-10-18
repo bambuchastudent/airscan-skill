@@ -132,3 +132,44 @@ VERIFIED: GitHub file writes and Git tree mode change succeeded. NOT VERIFIED: r
 ## 2026-10-18 — CI execution evidence investigation
 
 Added an explicit CI step for wrapper distribution metadata and `./mvnw -version` at ddd3cb99a9901be8a39be234af29b26ad6fc6eb7. The GitHub connector `fetch_commit_workflow_runs` returned zero runs for 3f840c8, but this endpoint only returns pull-request-triggered runs; therefore this does **not** establish that push CI did not run. GitHub Actions public page could not be fetched in this environment. Local runner has OpenJDK 21.0.12.1, no `mvn`, and cannot resolve github.com; it is unsuitable for canonical Java 25 validation. Consequently no green CI run, runtime PASS, or final SHA evidence is claimed. Remaining work: obtain actual Actions push-run logs through a suitable GitHub Actions interface; remediate failures; only then proceed to formal/semantic evidence.
+
+## 2026-10-18 — PR #1 reproducible CI and formal toolchain evidence
+
+Branch: `ci/bootstrap-audit-gates` (not merged); PR: https://github.com/bambuchastudent/airscan-skill/pull/1.
+
+VERIFIED: GitHub Actions run https://github.com/bambuchastudent/airscan-skill/actions/runs/39121502784 at commit `1360c01134e9ed4c91adaa8d41c0607fbe36e480` completed with five successful jobs: `java-and-contract`, `openspec`, `alloy-bootstrap`, `tlc-bootstrap`, `dafny-bootstrap`. The Java job includes Maven Wrapper, Spotless, Checkstyle, Java 25/Quarkus HTTP and worker tests. Formal smokes are deliberately tiny toolchain examples, not proofs of AirScan product invariants. Dafny verifies a pure bootstrap decision function and builds Java via `dafny build --target:java`.
+
+NOT VERIFIED: Graphify installed version, graph creation, impact lookup; Serena activation, symbol references and status lookup. Neither tool is exposed through the available connected execution interfaces. These checks require actual external tool sessions with recorded output, not inferred results. Also pending: explicit runtime smoke of generated Dafny Java, and final evidence snapshot tied to final PR SHA after all gates are resolved. Status: NEEDS_CHANGES; not ready for external review.
+
+## 2026-10-18 — Kotlin cache, Dafny runtime, Serena integration (PR #1)
+
+- `14a85c0de5ff1444247aabbde2222c96dbbf4eb4`: Kotlin `.main.kts` Graphify shared-cache coordinator replaces Python orchestration. CI [39123970145](https://github.com/bambuchastudent/airscan-skill/actions/runs/39123970145) PASS (7 jobs).
+- `d2bc2b9c8293ca616f2a0f9a12f50b17d14bff56`: added Dafny Java runtime execution. CI [39124094544](https://github.com/bambuchastudent/airscan-skill/actions/runs/39124094544) PASS (7 jobs); Dafny logs show 2 verified, 0 errors, and `dafny run --target:java` succeeded.
+- `58b6d2843578720aca0183bc013819dadb86df34`: added Serena MCP Java semantic gate. CI [39124415407](https://github.com/bambuchastudent/airscan-skill/actions/runs/39124415407) FAILED due to conflicting `mcp<2` constraint (Serena requires MCP 2.2.0).
+- `4ce5fe781d2f378c142df85d3f52b91b6e0afd37`: removed MCP constraint. CI [39124470305](https://github.com/bambuchastudent/airscan-skill/actions/runs/39124470305) has 7 PASS and Serena FAIL because unsupported `--headless` option prevented MCP startup.
+- `8a6a27200829eabca539133631325200b687a018`: removed unsupported Serena flag; new CI evidence pending. No semantic Serena PASS claimed.
+- `07b888417504f2b6c1906da346143a523fc6e86f`: reconciled OpenSpec task checkboxes with verified CI and explicit pending tasks.
+
+**Current gate:** NEEDS_CHANGES. Do not merge PR #1 until Serena and final SHA evidence are green, then update memory, iteration and review report.
+
+## 2026-10-18 — Serena passed and CI cache enabled
+
+Commit `733714ab675ac744bf5ec1fb46c76dffb0bbd44f`, run https://github.com/bambuchastudent/airscan-skill/actions/runs/39124935556: all 8 jobs PASS, including real Serena MCP symbol/reference lookup. Maven, npm/pip, Kotlin, TLC, Alloy and Dafny caches enabled; concurrent obsolete runs cancelled. Remaining: documentation consistency, final SHA CI and independent review. Serena installed from unpinned upstream Git main; Graphify cache rebuilds all nodes on source changes. No merge.
+
+## 2026-10-18 — external independent review accepted
+
+User provided an independent auditor PASS report for reviewed HEAD `b0c7a82ab5909ac485fa21db0b03aeb45e8751c3`, with zero BLOCKER/MAJOR findings, one MINOR Node.js 20 deprecation, and INFO Graphify/Serena cache limitations. Attributed summary saved in `docs/agent/reviews/independent-bootstrap-review-2026-10-18.md`; OpenSpec 4.5 checked. Implementer did not conduct independent audit. Subsequent documentation commits need fresh CI; PR not merged.
+
+## 2026-10-18 — second-review Graphify and documentation remediation (pending CI)
+
+Second independent review found unsupported `graphifyy==0.1.14` and contradictory current-state documents. Graphify upgraded to exact `graphifyy==0.9.92` (PyPI release 2026-10-16), install `python -m pip install 'graphifyy==0.9.92'`. Invocation: `kotlin scripts/graphify-shared-cache.main.kts --root . --cache-dir /tmp/airscan-shared-graph --output graphify-evidence`; Python extraction `from graphify.extract import extract; extract(files, root=root, parallel=False)`. Symbol query checks `BootstrapResource` and `BootstrapMarker`; relationship query requires an extracted `calls` edge from `BootstrapResource.status` to `BootstrapMarker.status` with evidence at `graphify-evidence/relationship.json`. CI asserts first cache_hit=false, second=true, changed Java source=false. This is a full-graph rebuild, not per-file incremental. **These are configured assertions, not yet observed PASS.** Tooling/MEMORY/tasks rewritten to show one current state. Baseline CI [39126204822](https://github.com/bambuchastudent/airscan-skill/actions/runs/39126204822) was 8/8 PASS before upgrade. New final CI and independent re-review still required. Supply-chain hardening of mutable action tags and formal-tool download checksums deferred.
+
+## 2026-10-18 — Graphify remediation verified, final technical review and evidence closeout
+
+- **Reviewed implementation HEAD:** `ca8daf41ba7efe62b6287f19d9f4f2ca0bdfa0dd`; baseline `d424d400c846f574a729d430f492b932396cd444`.
+- **CI:** [39126546579](https://github.com/bambuchastudent/airscan-skill/actions/runs/39126546579), **8/8 PASS**: `java-and-contract`, `openspec`, `tlc-bootstrap`, `alloy-bootstrap`, `dafny-bootstrap`, `java-symbol-smoke`, `graphify-java`, `serena-java`.
+- **Graphify VERIFIED:** exact pin `graphifyy==0.9.92`; install `python -m pip install 'graphifyy==0.9.92'`; graph command `kotlin scripts/graphify-shared-cache.main.kts --root . --cache-dir /tmp/airscan-shared-graph --output graphify-evidence`. Java symbol query located `BootstrapResource` and `BootstrapMarker`; graph 27 nodes/47 edges. Relationship query found `BootstrapResource.status() --calls--> BootstrapMarker.status()`, source `BootstrapResource.java:L17`, AST origin, INFERRED confidence 0.85. Cold `cache_hit=false`, warm `cache_hit=true`, changed Java source `cache_hit=false`. Full graph rebuild on source change is accepted; no per-file incremental claim.
+- **Serena VERIFIED:** MCP semantic symbol and reference queries, upstream immutable commit `d9e4c796fae0207ba6848d1df4b331122a5567b5`.
+- **Other accepted gates:** Java 25/Quarkus 3.40.1/Maven 3.9.11, HTTP/OpenAPI, worker boundary, Spotless/Checkstyle, OpenSpec 1.14.0 strict checks (all four active changes), Alloy 6.2.0, TLC 1.8.0, Dafny 4.11.0 Java build/run, scope and tracked-artifact gates.
+- **Final independent reviewer position:** implementation technically acceptable and architecture/roadmap conformant; `NEEDS_CHANGES` was solely for missing final evidence metadata and canonical review. Canonical review now recorded in `docs/reviews/bootstrap-agentic-foundation/2026-10-18T-final-review.md`; current-state documents and iteration summary reconciled.
+- **Remaining gate:** green CI on the documentation-only closeout HEAD, then metadata-only independent review. Do not merge or begin downstream OpenSpec work. Follow-up hardening (GitHub action SHA pins, formal-tool checksums) is nonblocking.

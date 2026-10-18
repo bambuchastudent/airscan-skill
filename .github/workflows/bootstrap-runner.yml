@@ -10,6 +10,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: bootstrap-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   java-and-contract:
     runs-on: ubuntu-24.04
@@ -20,6 +24,10 @@ jobs:
         with:
           distribution: temurin
           java-version: '25'
+          cache: maven
+          cache-dependency-path: |
+            pom.xml
+            worker/pom.xml
       - name: Verify wrapper executable mode
         run: |
           test -x ./mvnw
@@ -44,6 +52,8 @@ jobs:
           test -s openspec/changes/bootstrap-agentic-foundation/tasks.md
       - name: Deterministic Java formatting check
         run: ./mvnw -B -ntp spotless:check
+      - name: Java static analysis (Checkstyle)
+        run: ./mvnw -B -ntp checkstyle:check
       - name: Maven verification and Quarkus HTTP tests
         shell: bash
         run: |
@@ -53,6 +63,16 @@ jobs:
             echo 'BLOCKER: uncaught runtime exception in Maven/Quarkus logs' >&2
             exit 1
           fi
+      - name: Upload Maven diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bootstrap-maven-diagnostics
+          path: |
+            maven-verify.log
+            target/surefire-reports/**
+            worker/target/surefire-reports/**
+          if-no-files-found: warn
       - name: Verify real Quarkus test results
         shell: bash
         run: |
@@ -110,6 +130,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: openspec-npm-${{ runner.os }}-node22-v1
+          restore-keys: openspec-npm-${{ runner.os }}-node22-
       - name: Install pinned OpenSpec
         run: npm install --global @fission-ai/openspec@1.14.0
       - name: Inspect OpenSpec
@@ -120,3 +145,217 @@ jobs:
         run: openspec validate bootstrap-agentic-foundation --strict
       - name: Validate all active changes
         run: openspec validate --changes --strict
+
+  tlc-bootstrap:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/cache@v4
+        id: tlc-cache
+        with:
+          path: /tmp/tla2tools.jar
+          key: tlc-${{ runner.os }}-1.8.0
+      - name: Download pinned TLC tool
+        if: steps.tlc-cache.outputs.cache-hit != 'true'
+        run: curl --fail --location --retry 3 --output /tmp/tla2tools.jar https://github.com/tlaplus/tlaplus/releases/download/v1.8.0/tla2tools.jar
+      - name: Check finite bootstrap gate
+        run: java -cp /tmp/tla2tools.jar tlc2.TLC -config formal/bootstrap/BootstrapGate.cfg formal/bootstrap/BootstrapGate.tla
+
+  alloy-bootstrap:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/cache@v4
+        id: alloy-cache
+        with:
+          path: /tmp/alloy.jar
+          key: alloy-${{ runner.os }}-6.2.0
+      - name: Download Alloy command line distribution
+        if: steps.alloy-cache.outputs.cache-hit != 'true'
+        run: curl --fail --location --retry 3 --output /tmp/alloy.jar https://github.com/AlloyTools/org.alloytools.alloy/releases/download/v6.2.0/org.alloytools.alloy.dist.jar
+      - name: Bounded Alloy checks
+        run: java -jar /tmp/alloy.jar exec -c '*' -o /tmp/alloy-results formal/bootstrap/BootstrapGate.als
+
+  dafny-bootstrap:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+          cache-dependency-path: |
+            pom.xml
+            worker/pom.xml
+      - uses: actions/cache@v4
+        id: dafny-cache
+        with:
+          path: /tmp/dafny-dist
+          key: dafny-${{ runner.os }}-4.11.0
+      - name: Install pinned Dafny
+        if: steps.dafny-cache.outputs.cache-hit != 'true'
+        run: |
+          curl --fail --location --retry 3 --output /tmp/dafny.zip https://github.com/dafny-lang/dafny/releases/download/v4.11.0/dafny-4.11.0-x64-ubuntu-22.04.zip
+          unzip -q /tmp/dafny.zip -d /tmp/dafny-dist
+          find /tmp/dafny-dist -type f -name dafny -exec chmod +x {} \;
+      - name: Register Dafny binary
+        run: echo "$(dirname "$(find /tmp/dafny-dist -type f -name dafny | head -1)")" >> "$GITHUB_PATH"
+      - name: Verify Dafny bootstrap function
+        run: dafny verify formal/bootstrap/BootstrapGate.dfy
+      - name: Generate and compile Java from verified Dafny
+        run: |
+          mkdir -p /tmp/dafny-java
+          dafny translate java formal/bootstrap/BootstrapGate.dfy --output /tmp/dafny-java/BootstrapGate.java
+          find /tmp/dafny-java -type f | sort
+          test -s /tmp/dafny-java/BootstrapGate-java/BootstrapGate.java
+          test -s /tmp/dafny-java/BootstrapGate-java/GateLogic/__default.java
+          # Dafny's Java backend needs its generated runtime library; compile via the
+          # supported build command rather than pretending bare javac is sufficient.
+          dafny build --target:java formal/bootstrap/BootstrapGate.dfy
+          find formal/bootstrap -type f -name '*.jar' -print
+      - name: Execute generated Dafny Java
+        run: dafny run --target:java formal/bootstrap/BootstrapGate.dfy
+
+  java-symbol-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify Java symbols and call relationships
+        run: |
+          python3 scripts/java-symbol-smoke.py --root . --output java-symbol-evidence
+      - name: Upload symbol evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: java-symbol-bootstrap-evidence
+          path: java-symbol-evidence/
+          retention-days: 14
+          if-no-files-found: warn
+
+  graphify-java:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/cache@v4
+        id: kotlin-cache
+        with:
+          path: /tmp/kotlin-runtime
+          key: kotlin-${{ runner.os }}-2.2.21
+      - name: Install Kotlin scripting runtime
+        if: steps.kotlin-cache.outputs.cache-hit != 'true'
+        run: |
+          curl -fsSL -o /tmp/kotlin-compiler.zip https://github.com/JetBrains/kotlin/releases/download/v2.2.21/kotlin-compiler-2.2.21.zip
+          unzip -q /tmp/kotlin-compiler.zip -d /tmp/kotlin-runtime
+      - name: Register Kotlin binary
+        run: echo "/tmp/kotlin-runtime/kotlinc/bin" >> "$GITHUB_PATH"
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.m2/repository/org/jetbrains/kotlinx
+            ~/.cache/kotlin
+          key: graphify-deps-${{ runner.os }}-v2-${{ hashFiles('scripts/graphify-shared-cache.main.kts') }}
+          restore-keys: graphify-deps-${{ runner.os }}-v2-
+      - name: Install Java-capable Graphify
+        run: |
+          python -m pip install 'graphifyy==0.9.92'
+          python -m pip show graphifyy
+      - name: Build shared Graphify index and verify cache reuse
+        run: |
+          kotlin scripts/graphify-shared-cache.main.kts --root . --cache-dir /tmp/airscan-shared-graph --output graphify-evidence | tee /tmp/graphify-first.json
+          kotlin scripts/graphify-shared-cache.main.kts --root . --cache-dir /tmp/airscan-shared-graph --output graphify-evidence | tee /tmp/graphify-second.json
+          # A Java source mutation must invalidate the whole graph (no per-file delta claim).
+          printf '\\n// graphify cache invalidation smoke\\n' >> src/main/java/dev/airscan/bootstrap/BootstrapMarker.java
+          kotlin scripts/graphify-shared-cache.main.kts --root . --cache-dir /tmp/airscan-shared-graph --output graphify-evidence | tee /tmp/graphify-changed.json
+          python - <<'PY'
+          import json
+          first=json.load(open('/tmp/graphify-first.json'))
+          second=json.load(open('/tmp/graphify-second.json'))
+          changed=json.load(open('/tmp/graphify-changed.json'))
+          assert first['cache_hit'] is False, 'First run must build graph'
+          assert second['cache_hit'] is True, 'Second run must reuse graph'
+          assert changed['cache_hit'] is False, 'Changed Java input must invalidate graph'
+          assert second['nodes'] >= 2 and second['edges'] >= 1
+          relationship=json.load(open('graphify-evidence/relationship.json'))
+          assert relationship['pass'] and relationship['matched_edges'], 'Graphify relationship query failed'
+          print('Graphify version:', second['version'])
+          print('Graphify relationship:', relationship)
+          print('Graphify cache cold/warm/changed:', first['cache_hit'], second['cache_hit'], changed['cache_hit'])
+          PY
+      - name: Upload Graphify Java evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: graphify-java-bootstrap-evidence
+          path: graphify-evidence/
+          retention-days: 14
+          if-no-files-found: warn
+
+  serena-java:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+          cache-dependency-path: |
+            pom.xml
+            worker/pom.xml
+      - uses: actions/cache@v4
+        id: kotlin-cache
+        with:
+          path: /tmp/kotlin-runtime
+          key: kotlin-${{ runner.os }}-2.2.21
+      - name: Install Kotlin scripting runtime
+        if: steps.kotlin-cache.outputs.cache-hit != 'true'
+        run: |
+          curl -fsSL -o /tmp/kotlin-compiler.zip https://github.com/JetBrains/kotlin/releases/download/v2.2.21/kotlin-compiler-2.2.21.zip
+          unzip -q /tmp/kotlin-compiler.zip -d /tmp/kotlin-runtime
+      - name: Register Kotlin binary
+        run: echo "/tmp/kotlin-runtime/kotlinc/bin" >> "$GITHUB_PATH"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: serena-pip-${{ runner.os }}-py311-v2
+          restore-keys: serena-pip-${{ runner.os }}-py311-
+      - name: Install Serena and MCP client
+        run: |
+          python -m pip install 'git+https://github.com/oraios/serena.git@d9e4c796fae0207ba6848d1df4b331122a5567b5'
+          serena --version
+      - name: Verify Java semantic references
+        run: kotlin scripts/serena-semantic-smoke.main.kts
+      - name: Upload Serena evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: serena-java-semantic-evidence
+          path: serena-evidence/
+          retention-days: 14
+          if-no-files-found: warn

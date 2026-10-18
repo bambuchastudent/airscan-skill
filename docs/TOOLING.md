@@ -255,23 +255,16 @@ For rapidly changing agent tooling (OpenSpec, Graphify, Serena), record:
 
 Before changing a pinned version, create an explicit small change or dependency update with deterministic verification.
 
-## Bootstrap PoC verification commands (2026-10-18)
+## Current verified bootstrap tooling — 2026-10-18
 
-The canonical runtime is GitHub Actions `ubuntu-24.04` + `actions/setup-java@v5` Temurin 25. Record `java -version` and the actual patch release for each run. Quarkus is pinned to 3.40.1 in the control-plane POM. The worker is intentionally a separate plain-Java Maven artifact, with no REST dependencies. This is a minimal process boundary, not a distributed protocol.
+Java 25 Temurin, Maven Wrapper 3.9.11, Quarkus 3.40.1, REST/OpenAPI, separate worker, Spotless and Checkstyle, OpenSpec 1.14.0, Alloy 6.2.0, TLC 1.8.0, Dafny 4.11.0 including generated Java execution, and Serena MCP semantic lookup are VERIFIED in CI [39126546579](https://github.com/bambuchastudent/airscan-skill/actions/runs/39126546579) at `ca8daf41ba7efe62b6287f19d9f4f2ca0bdfa0dd`.
 
-```sh
-./mvnw -version
-./mvnw -B -ntp spotless:check
-./mvnw -B -ntp clean verify
-./mvnw -B -ntp -f worker/pom.xml clean verify
-openspec validate bootstrap-agentic-foundation --strict
-openspec validate --changes --strict
-```
+Serena is pinned to upstream commit `d9e4c796fae0207ba6848d1df4b331122a5567b5`. Install with `python -m pip install 'git+https://github.com/oraios/serena.git@d9e4c796fae0207ba6848d1df4b331122a5567b5'`; verify with `kotlin scripts/serena-semantic-smoke.main.kts`.
 
-`mvnw` currently uses a version-pinned, SHA-512-checked shell Maven 3.9.11 downloader; this was a custom launcher at the time of the original remediation. It has since been replaced with the upstream Apache Maven Wrapper scripts; use `./mvnw`. The CI Maven gate fails if its log contains `IllegalAccessError`, `NoClassDefFoundError`, or `Exception in thread`; this check supplements, never replaces, successful process exit and actual test results. Java 25 Surefire opens `java.base/java.lang` to unnamed modules for the JBoss Threads initialization path.
+Graphify **VERIFIED**: exact pin `graphifyy==0.9.92`, install `python -m pip install 'graphifyy==0.9.92'`. Graph command: `kotlin scripts/graphify-shared-cache.main.kts --root . --cache-dir /tmp/airscan-shared-graph --output graphify-evidence`. In CI [39126546579](https://github.com/bambuchastudent/airscan-skill/actions/runs/39126546579) at `ca8daf41ba7efe62b6287f19d9f4f2ca0bdfa0dd`, Graphify found 27 nodes, 47 edges, symbols `BootstrapResource` and `BootstrapMarker`, and extracted the `calls` relationship `BootstrapResource.status() -> BootstrapMarker.status()` (source `BootstrapResource.java:L17`, AST, INFERRED 0.85). Cold cache `false`, warm cache `true`, changed Java input `false` (correct invalidation). Full graph rebuild on changed Java source is accepted; **per-file incremental update is not implemented**.
 
-**Verification state:** commands are documented and CI configured, but current commits have no independently observed successful run. Graphify, Serena, Alloy, TLC and Dafny remain NOT VERIFIED and must not be reported PASS without versions, commands, and actual outputs.
+Final independent technical reviewer accepted implementation at `ca8daf41` and found only evidence/process gaps. Canonical review: `docs/reviews/bootstrap-agentic-foundation/2026-10-18T-final-review.md`. Evidence-closeout documentation is being committed; **CI on documentation-only HEAD and final metadata-only review remain pending**. No PR merge or downstream implementation until final PASS.
 
-## 2026-10-18 wrapper/Quarkus remediation
+## Historical bootstrap remediation notes
 
-`mvnw` now has Git mode 100755 and reads the Maven 3.9.11 version from `.mvn/wrapper/maven-wrapper.properties` (one version source). The launcher has since been replaced with the upstream Apache Maven Wrapper shell and Windows scripts (source: apache/maven-wrapper, master, retrieved 2026-10-18); Git mode 100755 was set on the Unix script. `./mvnw -version` has not yet been observed passing on CI. Spotless 2.46.1 and google-java-format 1.28.0 are pinned for Java 25 compatibility, pending runtime verification. Quarkus JUnit artifact is `quarkus-junit`, and Surefire uses `@{argLine}` plus `java.util.logging.manager` and `java.lang` opening. No `java.lang.invoke` opening has been added without evidence of necessity.
+Earlier bootstrap iterations encountered failed Serena CLI flags, unpinned Serena upstream, and runtime failures. Chronological evidence is preserved in `docs/agent/WORKLOG.md`; historical failures do not describe current state. Node 20 deprecation, mutable GitHub action major tags and missing formal-tool binary checksums are follow-up supply-chain hardening, not part of this remediation.

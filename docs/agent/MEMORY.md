@@ -7,7 +7,7 @@ This file is the curated durable memory for agents working on this repository. K
 - Repository is in specification/bootstrap phase.
 - Default branch: `develop`.
 - Production implementation language: Java, not Python.
-- Planned runtime baseline: Java 25 LTS, Maven, stable Quarkus 3.x selected/pinned during bootstrap.
+- Verified runtime baseline: Java 25 Temurin 25.0.4.1, Maven Wrapper 3.9.11, Quarkus 3.40.1.
 - Preferred hosted control plane: Google Cloud Run.
 - Preferred central operational/materialized store: Cloud Firestore.
 - Preferred immutable history/archive: Cloud Storage compressed scan/fare batches.
@@ -96,31 +96,23 @@ Initial invariant families:
 - atomic/monotonic snapshot publication;
 - deterministic top-N ranking.
 
-## Current unresolved items
+## Current verified bootstrap status (2026-10-18)
 
-- Exact stable Quarkus 3.x version must be verified/pinned during bootstrap.
-- Exact tested versions/setup of OpenSpec, Graphify, Serena, Alloy, TLA+/TLC, and Dafny must be recorded by bootstrap.
-- Exact worker authentication mechanism (simple project token vs Google-native identity/OIDC) must be decided in add-distributed-control-plane.
-- Actual Firestore/Cloud Run/Storage region/cost must be verified at deployment; preferred first region is Madrid (`europe-southwest1`) where supported.
-- First authoritative topology adapter must be selected only after source-access research.
-- First airline fare adapter must not be selected until topology/bootstrap foundations are proven.
-- Concrete route-inactivity thresholds remain a future configuration/design decision.
+- Java 25 Temurin, Quarkus 3.40.1, Maven Wrapper 3.9.11, REST/OpenAPI, independent worker boundary, Spotless and Checkstyle: VERIFIED.
+- OpenSpec 1.14.0 strict checks, Alloy 6.2.0, TLC 1.8.0, Dafny 4.11.0 verify/Java execution: VERIFIED.
+- Serena MCP `find_symbol` and `find_referencing_symbols`: VERIFIED, upstream commit pinned to `d9e4c796fae0207ba6848d1df4b331122a5567b5`.
+- Graphify `graphifyy==0.9.92`: **VERIFIED** at `ca8daf41` in CI 39126546579. Extracted `BootstrapResource.status() --calls--> BootstrapMarker.status()` edge (AST, inferred 0.85); 27 nodes/47 edges; cold/warm/changed-input cache `false/true/false`. Full rebuild on Java change, not per-file incremental.
+- Final technical implementation CI: [39126546579](https://github.com/bambuchastudent/airscan-skill/actions/runs/39126546579) **8/8 PASS** at `ca8daf41ba7efe62b6287f19d9f4f2ca0bdfa0dd`.
+- External first independent review: PASS for previous HEAD. Final independent technical review accepted implementation at `ca8daf41` but returned **NEEDS_CHANGES (process/evidence only)**: current evidence and canonical final review were missing. Documentation-only closeout addresses these findings; **final metadata-only review and CI on closeout HEAD remain pending**. Canonical report: `docs/reviews/bootstrap-agentic-foundation/2026-10-18T-final-review.md`.
+- PR #1 remains unmerged. Do not start `add-distributed-control-plane` before final independent verdict.
+- Follow-up only: immutable GitHub Actions SHA pins and downloaded binary SHA-256 checksums.
 
-## Next step
+## Future design decisions (not bootstrap blockers)
 
-Apply and verify `bootstrap-agentic-foundation` only. Its structure must preserve control-plane and crawler-worker runtime roles but must not provision production cloud resources. After external review, the next intended change is `add-distributed-control-plane`.
+- Worker authentication choice (OIDC vs project token) belongs to `add-distributed-control-plane`.
+- Firestore/Cloud Run/Storage deployment region/cost requires deployment-time validation.
+- First topology and fare adapters and route inactivity thresholds belong to future changes.
 
+## Historical bootstrap remediation notes
 
-## Bootstrap implementation update (2026-10-18)
-
-GitHub Actions on ubuntu-24.04 is the canonical verification environment. Run 39113553968 verified Java 25, Maven 3.10.0 and strict OpenSpec validation. Maven `verify` was skipped because the project did not yet have a POM. A subsequent series of commits added a Quarkus 3.27.2 POM, CDI bootstrap marker, REST/OpenAPI dependency, bootstrap status endpoint and tests. Those later commits have **no observed build/test evidence yet**. No production capability or worker protocol is implemented. Graphify, Serena, Alloy, TLC, and Dafny are pending. Continue bootstrap only; review GitHub Actions before reporting PASS.
-
-## 2026-10-18 remediation status
-
-Independent audit identified false-green Quarkus background runtime exceptions on Java 25. Quarkus upgraded from 3.27.2 to supported 3.40.1 LTS; Surefire receives --add-opens java.base/java.lang=ALL-UNNAMED. Real REST/OpenAPI HTTP tests and a separate no-REST worker Maven entrypoint were added. Maven 3.9.11 shell launcher and CI exception detection added. **None of these changes has yet been verified by a completed new Actions run.** Earlier CI 39113553968 verifies Java environment/OpenSpec only. Formatting, Graphify, Serena, Alloy, TLC, Dafny remain NOT VERIFIED. Bootstrap status NEEDS_CHANGES; no downstream change started.
-
-Bootstrap formatting update: Spotless 2.43.0 with google-java-format 1.25.2 and `bash mvnw spotless:check` was added to GitHub CI; still NOT VERIFIED. Current execution environment has Java 21 and no Maven, not the canonical Java 25 runner. The standard Maven Wrapper remains outstanding; the existing `mvnw` is a custom checksum-verified shell launcher. No new CI PASS has been observed.
-
-Follow-up 2026-10-18: Java sources/tests were adjusted toward Spotless Google format; GitHub CI now attempts independent worker main execution and a tracked-runtime-file/credential filename check. These changes have NOT been verified on a Java 25 CI run. Local runtime is Java 21.0.12.1, Maven absent, external Maven Central DNS unavailable. No current Actions run ID or log was retrievable. Bootstrap remains NEEDS_CHANGES.
-
-2026-10-18 priority remediation: Spotless 2.46.1 / google-java-format 1.28.0, Quarkus quarkus-junit, Surefire @{argLine}, LogManager property, Maven launcher version sourced from properties, executable Git mode 100755. All CI results remain NOT VERIFIED, and launcher is not yet upstream Maven Wrapper. Bootstrap NEEDS_CHANGES.
+Earlier CI failures, unverified tool statuses, Serena CLI incompatibility and mutable upstream dependency were resolved before CI 39126546579. For chronological evidence consult `docs/agent/WORKLOG.md`. This curated memory intentionally omits superseded state.
