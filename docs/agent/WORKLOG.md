@@ -112,3 +112,9 @@ Verification: NOT VERIFIED — no successful workflow job logs were retrieved fo
 Actor: ChatGPT implementation; change bootstrap-agentic-foundation only. Commits e31fbfa..e510254. Reformatted Java source and tests toward Google Java Format conventions; added CI execution of independent worker `main` and a tracked-runtime-artifact/credential filename gate. These are code changes, not successful verification evidence.
 
 VERIFIED: local environment `java -version` returned OpenJDK 21.0.12.1; no Maven executable; external Maven Central inaccessible from this environment. NOT VERIFIED: actual `bash mvnw clean verify` on Java 25, Spotless check, worker entrypoint in CI, security gate, OpenSpec all changes. The GitHub connector exposed no general workflow-run listing and public workflow URL could not be fetched; no current CI run ID or logs were obtained. Graphify/Serena/Alloy/TLC/Dafny remain NOT VERIFIED. Next: obtain CI run evidence and address all remaining bootstrap gates.
+
+## 2026-10-18 — priority remediation: formatter, wrapper, Quarkus
+
+Commits 9607aad..1a59b14. Changed Spotless 2.43.0 -> 2.46.1 and google-java-format 1.25.2 -> 1.28.0; replaced quarkus-junit5 with quarkus-junit; added Surefire late `@{argLine}` with empty fallback and JBoss LogManager system property. Wrapper script now derives Maven version from properties and Git tree mode 100755 was committed at 9f18dd8. CI requires executable mode and invokes `./mvnw`. Java lang.invoke was deliberately not opened without evidence.
+
+VERIFIED: GitHub create_tree/create_commit/update_ref succeeded for mode 100755. NOT VERIFIED: `./mvnw -version`, `./mvnw spotless:check`, Java 25 clean verify, REST/OpenAPI/worker and log cleanliness. No final SHA CI run/log available. Remaining blocker: custom launcher is not stock Apache Maven Wrapper. Do not mark OpenSpec tasks complete.
