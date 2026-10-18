@@ -100,3 +100,9 @@ NOT VERIFIED on new commits: `bash mvnw -B -ntp clean verify`, HTTP status, Open
 FAILED (audit baseline): background IllegalAccessError/NoClassDefFoundError despite false-green Maven; no new run yet to demonstrate fix.
 No task checkboxes checked. CI run URL for new commits: not yet available/observed.
 Next: obtain latest run, correct errors, finish missing smoke gates and evidence. Status NEEDS_CHANGES.
+
+## 2026-10-18 — static formatting gate
+
+Actor: ChatGPT implementation; OpenSpec bootstrap-agentic-foundation tasks 1.4 and 4.3 (IN PROGRESS).
+Commits: f102968..abe388c. Added pinned Spotless Maven plugin, CI `bash mvnw -B -ntp spotless:check`, and documented bootstrap commands in docs/TOOLING.md.
+Verification: NOT VERIFIED — no successful workflow job logs were retrieved for these commits; `java -version` locally showed Java 21 and Maven is unavailable, so no local Java 25 build was claimed. GitHub workflow status cannot be inferred from code changes. Next: inspect CI and fix failures; formal/agent gates remain pending.
