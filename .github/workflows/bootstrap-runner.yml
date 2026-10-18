@@ -10,6 +10,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: bootstrap-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   java-and-contract:
     runs-on: ubuntu-24.04
@@ -20,6 +24,10 @@ jobs:
         with:
           distribution: temurin
           java-version: '25'
+          cache: maven
+          cache-dependency-path: |
+            pom.xml
+            worker/pom.xml
       - name: Verify wrapper executable mode
         run: |
           test -x ./mvnw
@@ -122,6 +130,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: openspec-npm-${{ runner.os }}-node22-v1
+          restore-keys: openspec-npm-${{ runner.os }}-node22-
       - name: Install pinned OpenSpec
         run: npm install --global @fission-ai/openspec@1.14.0
       - name: Inspect OpenSpec
@@ -142,7 +155,13 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+      - uses: actions/cache@v4
+        id: tlc-cache
+        with:
+          path: /tmp/tla2tools.jar
+          key: tlc-${{ runner.os }}-1.8.0
       - name: Download pinned TLC tool
+        if: steps.tlc-cache.outputs.cache-hit != 'true'
         run: curl --fail --location --retry 3 --output /tmp/tla2tools.jar https://github.com/tlaplus/tlaplus/releases/download/v1.8.0/tla2tools.jar
       - name: Check finite bootstrap gate
         run: java -cp /tmp/tla2tools.jar tlc2.TLC -config formal/bootstrap/BootstrapGate.cfg formal/bootstrap/BootstrapGate.tla
@@ -156,7 +175,13 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+      - uses: actions/cache@v4
+        id: alloy-cache
+        with:
+          path: /tmp/alloy.jar
+          key: alloy-${{ runner.os }}-6.2.0
       - name: Download Alloy command line distribution
+        if: steps.alloy-cache.outputs.cache-hit != 'true'
         run: curl --fail --location --retry 3 --output /tmp/alloy.jar https://github.com/AlloyTools/org.alloytools.alloy/releases/download/v6.2.0/org.alloytools.alloy.dist.jar
       - name: Bounded Alloy checks
         run: java -jar /tmp/alloy.jar exec -c '*' -o /tmp/alloy-results formal/bootstrap/BootstrapGate.als
@@ -170,12 +195,23 @@ jobs:
         with:
           distribution: temurin
           java-version: '25'
+          cache: maven
+          cache-dependency-path: |
+            pom.xml
+            worker/pom.xml
+      - uses: actions/cache@v4
+        id: dafny-cache
+        with:
+          path: /tmp/dafny-dist
+          key: dafny-${{ runner.os }}-4.11.0
       - name: Install pinned Dafny
+        if: steps.dafny-cache.outputs.cache-hit != 'true'
         run: |
           curl --fail --location --retry 3 --output /tmp/dafny.zip https://github.com/dafny-lang/dafny/releases/download/v4.11.0/dafny-4.11.0-x64-ubuntu-22.04.zip
           unzip -q /tmp/dafny.zip -d /tmp/dafny-dist
           find /tmp/dafny-dist -type f -name dafny -exec chmod +x {} \;
-          echo "$(dirname "$(find /tmp/dafny-dist -type f -name dafny | head -1)")" >> "$GITHUB_PATH"
+      - name: Register Dafny binary
+        run: echo "$(dirname "$(find /tmp/dafny-dist -type f -name dafny | head -1)")" >> "$GITHUB_PATH"
       - name: Verify Dafny bootstrap function
         run: dafny verify formal/bootstrap/BootstrapGate.dfy
       - name: Generate and compile Java from verified Dafny
@@ -221,11 +257,26 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+      - uses: actions/cache@v4
+        id: kotlin-cache
+        with:
+          path: /tmp/kotlin-runtime
+          key: kotlin-${{ runner.os }}-2.2.21
       - name: Install Kotlin scripting runtime
+        if: steps.kotlin-cache.outputs.cache-hit != 'true'
         run: |
           curl -fsSL -o /tmp/kotlin-compiler.zip https://github.com/JetBrains/kotlin/releases/download/v2.2.21/kotlin-compiler-2.2.21.zip
           unzip -q /tmp/kotlin-compiler.zip -d /tmp/kotlin-runtime
-          echo "/tmp/kotlin-runtime/kotlinc/bin" >> "$GITHUB_PATH"
+      - name: Register Kotlin binary
+        run: echo "/tmp/kotlin-runtime/kotlinc/bin" >> "$GITHUB_PATH"
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.m2/repository/org/jetbrains/kotlinx
+            ~/.cache/kotlin
+          key: graphify-deps-${{ runner.os }}-v2-${{ hashFiles('scripts/graphify-shared-cache.main.kts') }}
+          restore-keys: graphify-deps-${{ runner.os }}-v2-
       - name: Install Java-capable Graphify
         run: |
           python -m pip install 'graphifyy==0.1.14'
@@ -263,11 +314,27 @@ jobs:
         with:
           distribution: temurin
           java-version: '25'
+          cache: maven
+          cache-dependency-path: |
+            pom.xml
+            worker/pom.xml
+      - uses: actions/cache@v4
+        id: kotlin-cache
+        with:
+          path: /tmp/kotlin-runtime
+          key: kotlin-${{ runner.os }}-2.2.21
       - name: Install Kotlin scripting runtime
+        if: steps.kotlin-cache.outputs.cache-hit != 'true'
         run: |
           curl -fsSL -o /tmp/kotlin-compiler.zip https://github.com/JetBrains/kotlin/releases/download/v2.2.21/kotlin-compiler-2.2.21.zip
           unzip -q /tmp/kotlin-compiler.zip -d /tmp/kotlin-runtime
-          echo "/tmp/kotlin-runtime/kotlinc/bin" >> "$GITHUB_PATH"
+      - name: Register Kotlin binary
+        run: echo "/tmp/kotlin-runtime/kotlinc/bin" >> "$GITHUB_PATH"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: serena-pip-${{ runner.os }}-py311-v2
+          restore-keys: serena-pip-${{ runner.os }}-py311-
       - name: Install Serena and MCP client
         run: |
           python -m pip install 'git+https://github.com/oraios/serena.git'
