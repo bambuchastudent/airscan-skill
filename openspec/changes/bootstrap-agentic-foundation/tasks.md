@@ -28,11 +28,10 @@
 - [x] 4.4 Run the complete documented bootstrap verification set plus strict OpenSpec validation, append exact results to WORKLOG.md, update MEMORY.md with verified versions/decisions, and create a bootstrap implementation iteration summary.
 - [x] 4.5 Create a self-contained review report for the bootstrap implementation commit range; do not start add-route-topology until the review has no blocking NEEDS_CHANGES findings.
 
-## Current evidence and remaining review gate — 2026-10-18
+## Final implementation evidence and metadata-only release gate — 2026-10-18
 
-- Previous HEAD `b0bedbd93d6b14084033f1065352bdcf0a994e97`: CI [39126204822](https://github.com/bambuchastudent/airscan-skill/actions/runs/39126204822), 8/8 PASS.
-- External first independent review: PASS for earlier HEAD; report `docs/agent/reviews/independent-bootstrap-review-2026-10-18.md`; task 4.5 records that review, **not** the final post-remediation acceptance.
-- Second reviewer identified MAJOR Graphify 0.1.14 unsupported and contradictory current-state documentation. Remediation upgrades Graphify to pinned 0.9.92, adds explicit relationship check, and reconciles TOOLING/MEMORY/tasks.
-- **Current release gate: PENDING final 8/8 CI on remediation HEAD and second independent final review.** No merge; no downstream OpenSpec work.
-- Historical CI failures and superseded checkpoints are preserved in `docs/agent/WORKLOG.md`, not repeated here.
-- Follow-up nonblocking: SHA-pin GitHub Actions and verify downloaded formal-tool binary checksums.
+- **Tasks 1.1–4.3:** implementation and deterministic CI evidence accepted.
+- **Task 4.4:** complete — final implementation HEAD `ca8daf41ba7efe62b6287f19d9f4f2ca0bdfa0dd`, [CI 39126546579](https://github.com/bambuchastudent/airscan-skill/actions/runs/39126546579), **8/8 PASS**. Exact versions, commands, Graphify relationship and cache results recorded in `docs/agent/WORKLOG.md`, `docs/agent/MEMORY.md`, `docs/TOOLING.md` and `docs/agent/iterations/bootstrap-2026-10-18.md`.
+- **Task 4.5:** canonical final independent technical review package exists at `docs/reviews/bootstrap-agentic-foundation/2026-10-18T-final-review.md`, covering baseline `d424d400c846f574a729d430f492b932396cd444` through reviewed implementation HEAD `ca8daf41ba7efe62b6287f19d9f4f2ca0bdfa0dd`. Final reviewer accepted the technical implementation, requesting only this evidence/process closeout. Earlier draft and independent review are retained as historical evidence.
+- **Release gate remains PENDING:** obtain green 8/8 CI for documentation-only closeout HEAD, then request final **metadata-only independent PASS**. The checked tasks describe completed deliverables, **not** permission to merge or begin downstream work.
+- Nonblocking future work: immutable action SHA pins, formal-tool distribution checksums, Serena LSP cache persistence, finer Graphify incremental updates, develop branch protection.
