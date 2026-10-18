@@ -15,3 +15,7 @@ All eight jobs passed, including Serena semantic references, Graphify Java AST, 
 
 ## Verdict
 NEEDS_CHANGES until Serena pin is resolved and final-SHA CI is green. This is a provisional independent evidence audit, not approval to merge.
+
+## Remediation after initial review
+
+Commit `6fd0f23cdb8005f0a614b5d7e11b4bde3d7bdea2` pins Serena to upstream `d9e4c796fae0207ba6848d1df4b331122a5567b5`. The mutable-reference blocker is addressed in configuration but runtime compatibility and final-SHA green CI remain unverified. Verdict remains NEEDS_CHANGES pending CI and final evidence review.
