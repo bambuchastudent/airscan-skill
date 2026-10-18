@@ -173,3 +173,16 @@ Second independent review found unsupported `graphifyy==0.1.14` and contradictor
 - **Other accepted gates:** Java 25/Quarkus 3.40.1/Maven 3.9.11, HTTP/OpenAPI, worker boundary, Spotless/Checkstyle, OpenSpec 1.14.0 strict checks (all four active changes), Alloy 6.2.0, TLC 1.8.0, Dafny 4.11.0 Java build/run, scope and tracked-artifact gates.
 - **Final independent reviewer position:** implementation technically acceptable and architecture/roadmap conformant; `NEEDS_CHANGES` was solely for missing final evidence metadata and canonical review. Canonical review now recorded in `docs/reviews/bootstrap-agentic-foundation/2026-10-18T-final-review.md`; current-state documents and iteration summary reconciled.
 - **Remaining gate:** green CI on the documentation-only closeout HEAD, then metadata-only independent review. Do not merge or begin downstream OpenSpec work. Follow-up hardening (GitHub action SHA pins, formal-tool checksums) is nonblocking.
+
+
+## 2026-10-18 — bootstrap final PASS, merge, and OpenSpec archive cleanup
+
+**Actor:** external architect/reviewer + post-merge cleanup; **OpenSpec:** `bootstrap-agentic-foundation` completion lifecycle.
+
+- Final metadata-only independent review returned **PASS / READY** for closeout HEAD `351c6835e003a3e5863d3632d77dd92566a25b45`.
+- Closeout GitHub Actions run `39127216895`: **8/8 PASS**.
+- PR #1 merged into `develop` as `a2e527c153f403ca47aabcec70a9460f75499909`.
+- Bootstrap implementation remains the independently accepted baseline from `ca8daf41ba7efe62b6287f19d9f4f2ca0bdfa0dd` / CI `39126546579`.
+- Post-merge cleanup updates current-state documentation and archives the completed OpenSpec change under `openspec/changes/archive/2026-10-18-bootstrap-agentic-foundation/`.
+- No runtime/product behavior is changed by this cleanup.
+- Next active change: `add-distributed-control-plane`. Do not begin `add-route-topology` or `add-durable-scan-retention` until the control-plane change passes its own external review.

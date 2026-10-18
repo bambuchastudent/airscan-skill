@@ -1,40 +1,48 @@
-# AirScan bootstrap — final independent technical review and evidence package
+# AirScan bootstrap — final independent technical review
 
-**Provenance:** Final independent review supplied by the user on 2026-10-18. This repository report records the reviewer's assessment; the implementer did not independently author or repeat that audit. Final verdict is **NEEDS_CHANGES — process/evidence only** until this closeout documentation is committed, CI on the documentation-only HEAD is green, and the reviewer performs the requested metadata-only check. The technical implementation was accepted.
+**Final verdict: PASS / READY**
 
 - Change: `bootstrap-agentic-foundation`
 - PR: https://github.com/bambuchastudent/airscan-skill/pull/1
 - Baseline: `d424d400c846f574a729d430f492b932396cd444`
-- **Reviewed implementation HEAD:** `ca8daf41ba7efe62b6287f19d9f4f2ca0bdfa0dd`
-- **Verified implementation CI:** [39126546579](https://github.com/bambuchastudent/airscan-skill/actions/runs/39126546579) — **8/8 PASS**
-- Current review scope: baseline through reviewed implementation HEAD; documentation-only closeout commits follow separately.
+- Reviewed implementation HEAD: `ca8daf41ba7efe62b6287f19d9f4f2ca0bdfa0dd`
+- Implementation CI: `39126546579` — **8/8 PASS**
+- Documentation/evidence closeout HEAD: `351c6835e003a3e5863d3632d77dd92566a25b45`
+- Closeout CI: `39127216895` — **8/8 PASS**
+- Merge commit on `develop`: `a2e527c153f403ca47aabcec70a9460f75499909`
 
-## Verified runtime and contracts
+## Accepted implementation
 
-The independent reviewer accepted Java 25 / Temurin 25.0.4.1, Maven Wrapper 3.9.11, Quarkus 3.40.1, successful `clean verify`, Quarkus startup/shutdown without background exceptions, three Quarkus tests with zero failures/errors/skips, HTTP `/bootstrap/status`, OpenAPI `/q/openapi`, independent worker Maven artifact and executable entrypoint, Spotless and Checkstyle.
+The independent reviewer accepted Java 25 / Temurin 25.0.4.1, Maven Wrapper 3.9.11, Quarkus 3.40.1, clean Maven verification, real HTTP REST/OpenAPI tests, the independent worker boundary, Spotless, Checkstyle, OpenSpec strict validation, Graphify 0.9.92, pinned Serena semantic navigation, Alloy, TLC and Dafny smoke gates.
 
-## Spec and agent tools
+Graphify evidence includes a real extracted AST `calls` edge from `BootstrapResource.status()` to `BootstrapMarker.status()`, plus cold/warm/changed-input cache behavior `false/true/false`.
 
-OpenSpec 1.14.0 strict bootstrap validation and strict validation of all four active changes passed. Serena MCP `find_symbol` and `find_referencing_symbols` passed with immutable upstream pin `d9e4c796fae0207ba6848d1df4b331122a5567b5`.
+The formal models are bootstrap toolchain/infrastructure checks only and are not represented as proofs of future product invariants.
 
-Graphify is pinned to `graphifyy==0.9.92`. Install: `python -m pip install 'graphifyy==0.9.92'`. Execute `kotlin scripts/graphify-shared-cache.main.kts --root . --cache-dir /tmp/airscan-shared-graph --output graphify-evidence`. Run 39126546579 shows 27 nodes, 47 edges, a real extracted AST `calls` edge from `BootstrapResource.status()` to `BootstrapMarker.status()` at `BootstrapResource.java:L17`, `confidence=INFERRED`, score `0.85`. Cold cache `false`, warm cache `true`, changed Java input `false` (invalidation); all assertions passed. The implementation rebuilds the full graph on source changes; per-file incremental update is **not** claimed.
+## Architecture and scope
 
-## Formal and safety gates
+The implementation conforms to the intended dependency order:
 
-Alloy 6.2.0 bounded model checks, TLC 1.8.0 finite-state model check, Dafny 4.11.0 verification, generated Java build and execution, tracked secret/runtime-artifact filename gate and product-scope isolation passed. These bootstrap models are toolchain/infrastructure checks, **not** proofs of future product invariants.
+1. `bootstrap-agentic-foundation` — completed
+2. `add-distributed-control-plane`
+3. `add-route-topology`
+4. `add-durable-scan-retention`
 
-## Architecture and roadmap conformance
+Bootstrap does not implement airline adapters, route topology, fares, production Firestore/Cloud Storage persistence, worker lease/heartbeat protocol, Firebase UI, dashboard or ground routing.
 
-Matches the documented order: (1) bootstrap-agentic-foundation, (2) add-distributed-control-plane, (3) add-route-topology, (4) add-durable-scan-retention. Bootstrap contains only the Quarkus control-plane and plain-Java worker foundations. REST/OpenAPI is the primary machine interface; CLI/JSON is the local automation direction and MCP is a future thin adapter. No airline adapters, crawling, topology, Firestore/Cloud Storage production persistence, worker lease/heartbeat protocol, Firebase UI, dashboard or ground routing were implemented. The planned Google-first architecture and worker-local SQLite spool/outbox remain future work.
+## Findings
 
-## Independent review findings and closeout
+No BLOCKER or MAJOR finding remains.
 
-The reviewer found **no remaining technical bootstrap blockers** at implementation HEAD `ca8daf41ba7efe62b6287f19d9f4f2ca0bdfa0dd`. Two **MAJOR process/evidence** findings required updating current-state documentation and creating this canonical report; both were addressed by the documentation-only closeout commits, subject to final CI and reviewer confirmation. Historical draft `2026-10-18T0920Z-implementation-review.md` is retained unchanged as historical evidence. The first external independent PASS review covered an earlier HEAD; this report records the later review of the Graphify-remediated implementation.
+Nonblocking future hardening:
+- immutable SHA pins for GitHub Actions;
+- checksums for downloaded formal-tool distributions;
+- Serena LSP cache persistence;
+- finer-grained Graphify incremental updates;
+- `develop` branch protection.
 
-Nonblocking future work: immutable GitHub Actions commit SHA pins; SHA-256 checks for downloaded formal-tool distributions; Serena LSP cache persistence; finer-grained Graphify incremental updates; `develop` branch protection.
+## Release decision
 
-## Release gate
+`bootstrap-agentic-foundation` is complete and may be archived.
 
-**Technical implementation: ACCEPTED by final independent reviewer.**
-**Repository bootstrap closeout: PENDING documentation-only HEAD CI and metadata-only independent confirmation.**
-Do not merge PR #1 or begin `add-distributed-control-plane` before final reviewer PASS.
+PR #1 has been merged. The next permitted implementation change is `add-distributed-control-plane`; downstream topology/provider work must wait for that change's verification and review.
