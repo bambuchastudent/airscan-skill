@@ -9,12 +9,11 @@ import jakarta.ws.rs.core.MediaType;
 /** Bootstrap-only API: not a job, fare or crawler contract. */
 @Path("/bootstrap/status")
 public class BootstrapResource {
-    @Inject
-    BootstrapMarker marker;
+  @Inject BootstrapMarker marker;
 
-    @GET
-    @Produces(MediaType.TEXT_PLAIN)
-    public String status() {
-        return marker.status();
-    }
+  @GET
+  @Produces(MediaType.TEXT_PLAIN)
+  public String status() {
+    return marker.status();
+  }
 }
