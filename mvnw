@@ -1,7 +1,8 @@
 #!/usr/bin/env sh
 set -eu
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-VERSION=3.9.11
+VERSION=$(sed -n 's#^distributionUrl=.*/apache-maven/\([^/]*\)/.*#\1#p' "$ROOT/.mvn/wrapper/maven-wrapper.properties")
+[ -n "$VERSION" ] || { echo "Missing Maven distributionUrl version" >&2; exit 1; }
 BASE="${HOME}/.m2/wrapper/dists/apache-maven-${VERSION}"
 MVN="${BASE}/apache-maven-${VERSION}/bin/mvn"
 if [ ! -x "$MVN" ]; then
