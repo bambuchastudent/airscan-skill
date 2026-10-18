@@ -28,7 +28,9 @@ class FirestoreCentralOperationalStoreIT {
       assertEquals(record, application.find(id).orElseThrow());
       assertFalse(application.find(UUID.randomUUID().toString()).isPresent());
     }
-    try (var restartedClient = options.getService()) {
+    var restartedOptions =
+        FirestoreOptions.newBuilder().setProjectId(project).setEmulatorHost(host).build();
+    try (var restartedClient = restartedOptions.getService()) {
       var application =
           new CentralRecordService(new FirestoreCentralOperationalStore(restartedClient));
       assertEquals(uniqueLabel, application.find(id).orElseThrow().label());
