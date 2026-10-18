@@ -43,10 +43,22 @@ async def main():
                 "name_path":"BootstrapMarker/status",
                 "relative_path":"src/main/java/dev/airscan/bootstrap/BootstrapMarker.java"})
             assert "BootstrapResource" in references,references
+            application_symbol=await invoke("find_symbol",{
+                "name_path_pattern":"CapabilitiesService/current",
+                "relative_path":"src","include_body":True,
+                "substring_matching":True})
+            assert "current" in application_symbol,application_symbol
+            application_refs=await invoke("find_referencing_symbols",{
+                "name_path":"CapabilitiesService/current",
+                "relative_path":"src/main/java/dev/airscan/application/CapabilitiesService.java"})
+            assert "CapabilitiesResource" in application_refs,application_refs
+            assert "McpCapabilitiesAdapter" in application_refs,application_refs
             Path("serena-evidence/semantic.json").write_text(json.dumps({
                 "tools":sorted(required),"resource":symbols,
-                "marker_status":marker,"references":references},indent=2))
-            print("Serena Java semantic lookup and references PASS")
+                "marker_status":marker,"references":references,
+                "application_service":application_symbol,
+                "application_references":application_refs},indent=2))
+            print("Serena Java semantic lookup and references PASS; capability REST/MCP shared-service references PASS")
 asyncio.run(main())
 """.trimIndent()
 val tmp=Files.createTempFile("airscan-serena-", ".py")

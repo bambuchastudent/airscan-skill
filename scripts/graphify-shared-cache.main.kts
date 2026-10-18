@@ -101,9 +101,25 @@ print(json.dumps(result))
                 check(related.isNotEmpty()) {
                     "Graphify relationship missing: status() call between bootstrap symbols"
                 }
+                // Iteration 1: both transport adapters must reach the same
+                // application service, without an adapter-to-adapter dependency.
+                val applicationEdges = relationships.filter { edge ->
+                    val source = edge["source"]?.jsonPrimitive?.content?.lowercase() ?: ""
+                    val target = edge["target"]?.jsonPrimitive?.content?.lowercase() ?: ""
+                    edge["relation"]?.jsonPrimitive?.content == "calls" &&
+                        target.contains("capabilitiesservice") && target.endsWith("_current") &&
+                        (source.contains("capabilitiesresource") || source.contains("mcpcapabilitiesadapter"))
+                }
+                check(applicationEdges.any {
+                    it["source"]?.jsonPrimitive?.content?.lowercase()?.contains("capabilitiesresource") == true
+                }) { "Graphify: REST adapter -> CapabilitiesService.current call not found" }
+                check(applicationEdges.any {
+                    it["source"]?.jsonPrimitive?.content?.lowercase()?.contains("mcpcapabilitiesadapter") == true
+                }) { "Graphify: MCP adapter -> CapabilitiesService.current call not found" }
                 val relationshipEvidence = buildJsonObject {
                     put("query", "status() -> status() (distinct Graphify graph nodes)")
                     put("matched_edges", JsonArray(related))
+                    put("application_service_edges", JsonArray(applicationEdges))
                     put("pass", true)
                 }
                 writeAtomic(cache.resolve("relationship.json"), relationshipEvidence.toString())
