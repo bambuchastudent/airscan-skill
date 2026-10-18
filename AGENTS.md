@@ -342,3 +342,7 @@ Pause implementation and surface the problem when:
 - deterministic tests contradict the proposed design;
 - a task would require bypassing access controls;
 - a worker result lacks reproducible evidence.
+
+## Bootstrap evidence and review protocol
+
+Canonical plan: `openspec/changes/bootstrap-agentic-foundation/tasks.md`. Mark tasks complete only with specific command/artifact evidence and commit/run references. Append chronological outcomes to `docs/agent/WORKLOG.md`; maintain latest state in `docs/agent/MEMORY.md`, superseding old claims. Record each iteration's commit range, changed files, tests and limitations. Independent review must include exact findings and PASS/NEEDS_CHANGES; green CI alone does not constitute review. No downstream feature work before review acceptance.
