@@ -4,6 +4,8 @@ import dev.airscan.application.port.ArchiveReference;
 import dev.airscan.application.port.ObservationArchive;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
@@ -47,12 +49,31 @@ public final class LocalGzipObservationArchive implements ObservationArchive {
     try {
       Files.createDirectories(destination.getParent());
       byte[] compressed = gzip(sanitizedPayload);
+      // Stage in the destination directory and sync the complete gzip before publication.
+      // ATOMIC_MOVE alone is unsafe here: Java permits replacing an existing target.
+      // A hard link publishes one complete inode atomically and fails if the key exists.
+      Path staging = Files.createTempFile(destination.getParent(), ".airscan-archive-", ".tmp");
       try {
-        Files.write(destination, compressed, StandardOpenOption.CREATE_NEW);
-      } catch (FileAlreadyExistsException existing) {
-        if (!Arrays.equals(readFile(destination), sanitizedPayload)) {
-          throw new IllegalStateException("Immutable archive object differs", existing);
+        try (var channel = FileChannel.open(staging, StandardOpenOption.WRITE)) {
+          ByteBuffer buffer = ByteBuffer.wrap(compressed);
+          while (buffer.hasRemaining()) {
+            channel.write(buffer);
+          }
+          channel.force(true);
         }
+        try {
+          Files.createLink(destination, staging);
+        } catch (FileAlreadyExistsException existing) {
+          if (!Arrays.equals(readFile(destination), sanitizedPayload)) {
+            throw new IllegalStateException("Immutable archive object differs or is corrupt", existing);
+          }
+        } catch (UnsupportedOperationException unsupported) {
+          throw new IllegalStateException(
+              "Atomic no-overwrite archive publication requires same-filesystem hard links",
+              unsupported);
+        }
+      } finally {
+        Files.deleteIfExists(staging);
       }
       return new ArchiveReference(
           sourceId, batchId, hash, key, "gzip", sanitizedPayload.length, Files.size(destination));
