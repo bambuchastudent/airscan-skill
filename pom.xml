@@ -10,6 +10,7 @@
     <quarkus.platform.version>3.40.1</quarkus.platform.version>
     <compiler-plugin.version>3.14.1</compiler-plugin.version>
     <surefire-plugin.version>3.5.4</surefire-plugin.version>
+    <spotless-plugin.version>2.43.0</spotless-plugin.version>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -48,6 +49,15 @@
   </dependencies>
   <build>
     <plugins>
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <version>${spotless-plugin.version}</version>
+        <configuration>
+          <formats><format><includes><include>*.md</include></includes><trimTrailingWhitespace/><endWithNewline/></format></formats>
+          <java><includes><include>src/**/*.java</include></includes><removeUnusedImports/><googleJavaFormat><version>1.25.2</version></googleJavaFormat></java>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>io.quarkus</groupId>
         <artifactId>quarkus-maven-plugin</artifactId>
