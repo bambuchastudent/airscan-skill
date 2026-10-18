@@ -28,23 +28,11 @@
 - [x] 4.4 Run the complete documented bootstrap verification set plus strict OpenSpec validation, append exact results to WORKLOG.md, update MEMORY.md with verified versions/decisions, and create a bootstrap implementation iteration summary.
 - [x] 4.5 Create a self-contained review report for the bootstrap implementation commit range; do not start add-route-topology until the review has no blocking NEEDS_CHANGES findings.
 
-## Current evidence (2026-10-18)
+## Current evidence and remaining review gate — 2026-10-18
 
-- Completed CI run [39124094544](https://github.com/bambuchastudent/airscan-skill/actions/runs/39124094544) at `d2bc2b9c8293ca616f2a0f9a12f50b17d14bff56`: all seven jobs PASS, including Java 25/Quarkus/worker, OpenSpec, Graphify Kotlin shared cache, Alloy, TLC, Dafny Java execution, and lexical Java smoke.
-- CI run [39124470305](https://github.com/bambuchastudent/airscan-skill/actions/runs/39124470305) at `4ce5fe781d2f378c142df85d3f52b91b6e0afd37`: seven jobs PASS, Serena FAIL (unsupported `--headless` CLI flag). The flag was removed in `8a6a27200829eabca539133631325200b687a018`; this fix is not yet verified.
-- Item 2.3 remains open until Serena MCP Java semantic symbols and references actually pass and evidence is uploaded.
-- Graphify's cache skips unchanged inputs; changes trigger a full AST rebuild, not per-file incremental updates. Cross-worktree sharing requires an explicitly shared cache directory.
-- Items 1.4, 3.4, 4.1, 4.2, 4.4 and 4.5 require documentary/evidence verification before marking complete.
-- Overall status: NEEDS_CHANGES; do not merge or start product features.
-
-## Latest checkpoint
-
-CI run 39124935556 at commit 733714ab675ac744bf5ec1fb46c76dffb0bbd44f: all eight jobs PASS, including Serena MCP semantic lookup. This supersedes the previous Serena failure note. Final SHA verification and independent review remain open (4.4 and 4.5). Serena Git installation is not pinned to a commit.
-
-## Independent reviewer handoff checkpoint
-
-Run 39125231439 on commit `1a9ea3159bb8de38ef603b84c694788da9c777df` passed 8/8 jobs with Serena pinned. Subsequent documentation-only commits require final HEAD verification. Implementation iteration summary and reviewer handoff are present. Item 4.5 remains explicitly open for an independent agent; implementer pre-audit is not an independent verdict.
-
-## External independent review accepted (2026-10-18)
-
-User supplied the separate auditor's PASS report for reviewed HEAD `b0c7a82ab5909ac485fa21db0b03aeb45e8751c3`; saved attribution and findings at `docs/agent/reviews/independent-bootstrap-review-2026-10-18.md`. No BLOCKER or MAJOR reported. MINOR: Node.js 20 action deprecation. INFO: Graphify full-graph invalidation and ephemeral Serena LSP. Item 4.5 closed on the strength of this externally supplied review; the implementer did not conduct it. Later documentation commits require their own CI check. Older NEEDS_CHANGES checkpoints above are historical, not the latest review verdict.
+- Previous HEAD `b0bedbd93d6b14084033f1065352bdcf0a994e97`: CI [39126204822](https://github.com/bambuchastudent/airscan-skill/actions/runs/39126204822), 8/8 PASS.
+- External first independent review: PASS for earlier HEAD; report `docs/agent/reviews/independent-bootstrap-review-2026-10-18.md`; task 4.5 records that review, **not** the final post-remediation acceptance.
+- Second reviewer identified MAJOR Graphify 0.1.14 unsupported and contradictory current-state documentation. Remediation upgrades Graphify to pinned 0.9.92, adds explicit relationship check, and reconciles TOOLING/MEMORY/tasks.
+- **Current release gate: PENDING final 8/8 CI on remediation HEAD and second independent final review.** No merge; no downstream OpenSpec work.
+- Historical CI failures and superseded checkpoints are preserved in `docs/agent/WORKLOG.md`, not repeated here.
+- Follow-up nonblocking: SHA-pin GitHub Actions and verify downloaded formal-tool binary checksums.
