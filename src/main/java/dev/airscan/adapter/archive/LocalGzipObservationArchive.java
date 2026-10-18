@@ -65,7 +65,8 @@ public final class LocalGzipObservationArchive implements ObservationArchive {
           Files.createLink(destination, staging);
         } catch (FileAlreadyExistsException existing) {
           if (!Arrays.equals(readFile(destination), sanitizedPayload)) {
-            throw new IllegalStateException("Immutable archive object differs or is corrupt", existing);
+            throw new IllegalStateException(
+                "Immutable archive object differs or is corrupt", existing);
           }
         } catch (UnsupportedOperationException unsupported) {
           throw new IllegalStateException(
