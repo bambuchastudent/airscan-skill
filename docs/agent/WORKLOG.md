@@ -106,3 +106,9 @@ Next: obtain latest run, correct errors, finish missing smoke gates and evidence
 Actor: ChatGPT implementation; OpenSpec bootstrap-agentic-foundation tasks 1.4 and 4.3 (IN PROGRESS).
 Commits: f102968..abe388c. Added pinned Spotless Maven plugin, CI `bash mvnw -B -ntp spotless:check`, and documented bootstrap commands in docs/TOOLING.md.
 Verification: NOT VERIFIED — no successful workflow job logs were retrieved for these commits; `java -version` locally showed Java 21 and Maven is unavailable, so no local Java 25 build was claimed. GitHub workflow status cannot be inferred from code changes. Next: inspect CI and fix failures; formal/agent gates remain pending.
+
+## 2026-10-18 — follow-up implementation: formatting and worker execution
+
+Actor: ChatGPT implementation; change bootstrap-agentic-foundation only. Commits e31fbfa..e510254. Reformatted Java source and tests toward Google Java Format conventions; added CI execution of independent worker `main` and a tracked-runtime-artifact/credential filename gate. These are code changes, not successful verification evidence.
+
+VERIFIED: local environment `java -version` returned OpenJDK 21.0.12.1; no Maven executable; external Maven Central inaccessible from this environment. NOT VERIFIED: actual `bash mvnw clean verify` on Java 25, Spotless check, worker entrypoint in CI, security gate, OpenSpec all changes. The GitHub connector exposed no general workflow-run listing and public workflow URL could not be fetched; no current CI run ID or logs were obtained. Graphify/Serena/Alloy/TLC/Dafny remain NOT VERIFIED. Next: obtain CI run evidence and address all remaining bootstrap gates.
