@@ -44,6 +44,8 @@ jobs:
           test -s openspec/changes/bootstrap-agentic-foundation/tasks.md
       - name: Deterministic Java formatting check
         run: ./mvnw -B -ntp spotless:check
+      - name: Java static analysis (Checkstyle)
+        run: ./mvnw -B -ntp checkstyle:check
       - name: Maven verification and Quarkus HTTP tests
         shell: bash
         run: |
