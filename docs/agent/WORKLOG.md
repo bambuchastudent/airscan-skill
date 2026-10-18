@@ -295,3 +295,36 @@ change complete/archive or begin Iteration 2 before that review.
 
 **Current closeout:** this WORKLOG entry, durable MEMORY, marked OpenSpec 2.1–2.3 and iteration report are part of the documentation-only code review closeout; green CI for this **new** commit must be observed before independent review.
 **Next:** independent external review of Iteration 2 only; do not merge PR #4 or start Iteration 3 without reviewer PASS.
+
+## 2026-10-18T17:20Z — Iteration 2 archive atomic-publication MAJOR remediation
+
+**Actor:** implementation orchestrator. **Change:** `add-distributed-control-plane`, task 2.3 (already checked, reviewed correction), not worker protocol. **External review input:** PR #4 at `d1bdaee60137d1fc367c1e573c845d92fc396711` accepted all persistence boundaries except **MAJOR** incomplete final archive object on a process/host crash during direct `CREATE_NEW` write.
+
+**Implementation range:** `77501c7bb8d0e4b84046da34c59a6410f3efe682` (atomic staging), `8593ca7f6fd9a0efdd22990ee726ceb24576c5f6` (tests), `2551ac26030fd26ddef782075294013727881610` (imports), `c4f25ff57e7425febb725b5c04385c9c1476f812` (Spotless exact corrections).
+
+**Files:** `src/main/java/dev/airscan/adapter/archive/LocalGzipObservationArchive.java`, `src/test/java/dev/airscan/adapter/archive/LocalGzipObservationArchiveTest.java`; design, WORKLOG, MEMORY and the existing Iteration 2 report updated in separate evidence-closeout commit.
+
+**Publication:** unique same-directory `Files.createTempFile(..., ".tmp")`, complete gzip `FileChannel.write` loop + `force(true)`; atomic create-only `Files.createLink(destination, staging)` and unconditional best-effort-on-Java-execution staging cleanup via `finally`. Java documents that `Files.move(..., ATOMIC_MOVE)` can overwrite an existing destination depending on provider, so `createLink` is used instead: never replace; fail closed when hard linking unsupported. Existing destination is decompressed and byte-compared with expected source, corrupt/truncated file fails without overwrite; simultaneous writers of identical payload return identical reference. Power-loss directory durability is not claimed, but a visible final entry never represents an incomplete staged gzip. Unrecoverable abrupt kill may orphan staging only, never authoritative final object.
+
+**Test changes:** existing archive test additionally checks SHA-256 and no staging files; new corrupt-existing gzip test verifies throw, byte-for-byte no overwrite and cleanup on failed publication; new four-concurrent-writer test verifies same immutable reference, correct bytes and no staging files. Three archive tests total.
+
+**CI execution at implementation SHA `c4f25ff57e7425febb725b5c04385c9c1476f812`:**
+[39148837864](https://github.com/bambuchastudent/airscan-skill/actions/runs/39148837864)
+**9/9 PASS** (all jobs terminal).
+- `./mvnw -B -ntp spotless:check` — PASS.
+- `./mvnw -B -ntp checkstyle:check` — PASS.
+- `./mvnw -B -ntp clean verify` — PASS; 11 root tests, 3 archive-specific, 0 failures/errors/skips; real Iteration 1 REST/OpenAPI/MCP regression PASS.
+- `./mvnw -B -ntp -f worker/pom.xml clean verify` — PASS; 2 worker tests, worker process smoke PASS, no SQLite change.
+- `./mvnw -B -ntp -f worker/pom.xml dependency:tree -DoutputFile=worker-dependencies.txt` plus no Google Firestore/Storage/Firebase SDK grep — PASS.
+- `gcloud emulators firestore start --database-mode=firestore-native --host-port=127.0.0.1:8085` — PASS; gcloud SDK 550.0.0 / emulator 1.20.2.
+- `./mvnw -B -ntp -Pfirestore-emulator verify` — PASS, mandatory 1 emulator Failsafe IT and 11 root regression tests, 0 failures/errors/skips, no credentials.
+- `openspec validate --archived --strict` — PASS.
+- `openspec validate --changes --strict` — PASS.
+- `kotlin scripts/graphify-shared-cache.main.kts --root . --cache-dir /tmp/airscan-shared-graph --output graphify-evidence` — PASS, Graphify 0.9.92 persistence symbols/relationships preserved.
+- `kotlin scripts/serena-semantic-smoke.main.kts` — PASS, pinned Serena `d9e4c796fae0207ba6848d1df4b331122a5567b5`, persistence symbol/reference checks.
+- `python3 scripts/java-symbol-smoke.py --root . --output java-symbol-evidence`, existing Alloy 6.2.0, TLC 1.8.0 and Dafny 4.11.0 gates — PASS, no new state-machine invariant.
+- Tracked-secret/runtime-artifact scan — PASS.
+
+**Failed/superseded evidence:** PR-branch CI `39148684334` (`77501c7b...`) and `39148736465` (`8593ca7f...`) cancelled by newer pushes; `39148762379` (`2551ac26...`) failed Java Spotless (2 formatting findings; remaining jobs superseded/cancelled). `c4f25ff5...` fixed the exact findings and passed CI `39148837864`. Do not conflate cancelled with PASS.
+
+**Explicit nonchanges/followups:** No `IN_FLIGHT` outbox state, strict FIFO queue ID, worker HTTP ingestion, auth, Firestore schema or deployment. SQLite Java 25 native-access warning remains nonblocking; monitor instead of changing JVM flags. Future externally supplied archive metadata is untrusted and must be corroborated against authoritative control-plane records. Final documentation-only closeout requires new CI; no external final PASS/merge/Iteration 3 claimed.

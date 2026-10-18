@@ -4,7 +4,7 @@ This file is the curated durable memory for agents working on this repository. K
 
 ## Current state
 
-- Bootstrap is complete and merged. `add-distributed-control-plane` Iteration 1 was accepted by external review and PR #3 merged as `4e82c92b8c6cd1f4716207c4ac18c4ef189c404e`. Iteration 2 persistence implementation is in draft PR #4, verified code SHA `59012715f26c0957366b6d6b22f108632f480a84`, CI `39142302544` 9/9 PASS; Iteration 2 external review remains pending. No Iteration 3.
+- Bootstrap is complete and merged. `add-distributed-control-plane` Iteration 1 was accepted by external review and PR #3 merged as `4e82c92b8c6cd1f4716207c4ac18c4ef189c404e`. Iteration 2 persistence remains in draft PR #4; external review found one archive crash-atomicity MAJOR, remediated at code SHA `c4f25ff57e7425febb725b5c04385c9c1476f812` (CI `39148837864`: 9/9 PASS). Final independent re-review is pending. No Iteration 3.
 - Default branch: `develop`.
 - Production implementation language: Java, not Python.
 - Verified runtime baseline: Java 25 Temurin 25.0.4.1, Maven Wrapper 3.9.11, Quarkus 3.40.1.
@@ -134,6 +134,13 @@ Earlier CI failures, unverified tool statuses, Serena CLI incompatibility and mu
 - Application-only `CentralOperationalStore` and `CentralRecordService` own UUID synthetic identities; Firestore adapter lives in `adapter/firestore` and is never present in worker dependencies. No new REST/MCP write endpoints.
 - Firestore native-mode emulator integration test uses a synthetic project, emulator host and fresh SDK client, no real Google credentials; **PASS** in CI `39142302544`. Production Firestore client injection/deployment remains deferred.
 - Worker-only SQLite `SqliteOutbox` uses schema v1, WAL, 5000ms busy timeout and FULL sync, with stable `batchId`, payload, creation time and PENDING/ACCEPTED states. Crash/reopen and acceptance test PASS.
-- Pure `ObservationArchive` port with local gzip/SHA-256 immutable adapter. Same payload returns same reference without overwriting; changed content gets a distinct key. Tests PASS; **no actual GCS SDK adapter yet**, see Iteration 2 report.
-- OpenSpec 2.1–2.3 verified at code SHA `59012715...`; final documentation/Graphify/Serena closeout requires its own green CI. Task 5.3 stays open for full change.
+- Pure `ObservationArchive` port with local gzip/SHA-256 immutable adapter. Final archive object is published only after same-directory unique staging + completed gzip + file-channel force, using atomic **no-replace hard-link creation** (`Files.createLink`). Repeated content is verified; corrupt existing final fails closed; staging cleaned on completed and failed attempts. No production GCS SDK adapter.
+- OpenSpec 2.1–2.3 remain checked. Archive atomicity remediation code SHA `c4f25ff5...` has 9/9 PASS in CI `39148837864`; final documentation-only closeout also requires CI. Task 5.3 stays open for full change.
 - No lease, heartbeat, worker submission/auth, scheduler, deployment, providers or new formal state machine. Iteration 3 requires independent external review PASS of Iteration 2 first.
+
+## Review constraints pending Iteration 3
+
+- SQLite remains `PENDING -> ACCEPTED`, with no `IN_FLIGHT` state or sequence/FIFO ID; deterministic `created_at, batch_id` ordering is sufficient. Lost response/retry must be made safe centrally in Iteration 3.
+- Archive reference metadata from future external clients is **not authority** and must be validated server-side against authoritative records.
+- Java 25 SQLite native-access warning is a nonblocking runtime/upgrade monitoring item; no speculative JVM flags.
+- PR #4 cannot merge and Iteration 3 cannot start before final independent external review PASS.

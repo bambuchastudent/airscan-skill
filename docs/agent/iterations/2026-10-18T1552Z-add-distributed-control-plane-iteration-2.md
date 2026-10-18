@@ -74,6 +74,73 @@ are not represented as passing checks.
 - OpenSpec checked: **2.1, 2.2, 2.3**. **3.x**, **4.x**, **5.1**, **5.3** open.
 - Final documentation/semantic-review closeout SHA requires a fresh CI check.
 
-**Status:** READY_FOR_EXTERNAL_REVIEW only upon green closeout CI.
-**Next:** independent external review of Iteration 2 only; do not merge or
-start Iteration 3 until external PASS.
+**Status:** Independent review found one MAJOR archive atomicity issue; a
+targeted implementation fixes it, while final external re-review remains pending.
+**Next:** Do not merge PR #4 or begin Iteration 3 before final external PASS.
+
+## Final independent-review remediation — archive publication
+
+**Reviewed baseline:** `d1bdaee60137d1fc367c1e573c845d92fc396711`
+**Final implementation SHA:** `c4f25ff57e7425febb725b5c04385c9c1476f812`
+**Implementation CI:** [39148837864](https://github.com/bambuchastudent/airscan-skill/actions/runs/39148837864) — **9/9 PASS**, 2026-10-18.
+**PR review range:** reviewed baseline -> implementation SHA + this documentation closeout; latest documentation SHA and its CI are reported by PR #4 checks because a commit cannot embed its own SHA.
+
+External review accepted the control-plane/SQLite/archive boundaries but identified
+a MAJOR crash-atomicity flaw: direct `Files.write(final, ..., CREATE_NEW)`
+could leave a truncated final gzip if interrupted. Remediation changes only
+`LocalGzipObservationArchive`, `LocalGzipObservationArchiveTest` and related
+evidence text.
+
+### Final atomic publication contract
+
+1. Gzip the tiny sanitized payload completely in memory.
+2. Create a unique staging file in the final target directory with
+   `Files.createTempFile`.
+3. Write the entire gzip through `FileChannel` and `force(true)` before
+   publishing.
+4. Atomically publish with `Files.createLink(final, staging)`, which
+   **cannot replace** a concurrently existing final path; the completed
+   staged inode becomes visible at one final name.
+5. If the target already exists, decompress it and compare all bytes with the
+   expected original. Same content returns the same reference, corrupt/
+   different content **fails closed**, no overwrite.
+6. `finally` removes the staging file after normal and exceptional returns.
+
+`Files.move(..., ATOMIC_MOVE)` alone cannot satisfy no-replace portability:
+Java explicitly allows provider-dependent replacement of an existing target.
+Hard-link publication is a stricter atomic create-only primitive. If unsupported
+on a file system, fail closed; no non-atomic fallback. A process kill can leave
+a harmless orphan staging file; it cannot poison the authoritative final path
+with incompletely written gzip. `force(true)` syncs staged file contents,
+not necessarily the final directory entry against sudden power loss.
+
+### Tests and evidence
+
+`LocalGzipObservationArchiveTest` now verifies:
+- Normal publication produces a readable, SHA-256-matching final gzip.
+- Identical retry returns equal `ArchiveReference` with identical final bytes.
+- Different content under same source/batch creates a different key; old
+  content remains valid.
+- No `*.tmp` staging artifacts after successful writes.
+- A deliberately truncated/corrupt pre-existing final object is neither
+  overwritten nor accepted; the error path cleans staging.
+- Four concurrent writers of identical identity converge on one immutable
+  reference, readable bytes and zero staging debris.
+
+**Verified:** `./mvnw -B -ntp spotless:check`, `./mvnw -B -ntp
+checkstyle:check`, `./mvnw -B -ntp clean verify` (**11 root tests**),
+`./mvnw -B -ntp -f worker/pom.xml clean verify` (**2 worker tests**),
+`./mvnw -B -ntp -Pfirestore-emulator verify` (**1 Firestore IT**),
+strict archived/active OpenSpec, Graphify, Serena, worker dependency isolation,
+tracked-secret gate and existing Alloy/TLC/Dafny all **PASS** at implementation
+SHA / CI `39148837864`.
+
+**Review dispositions:** SQLite stays `PENDING -> ACCEPTED`, no `IN_FLIGHT`
+and no insertion-sequence FIFO; retries depend on future *central* server
+idempotency. Externally supplied archive reference metadata will require
+control-plane validation. SQLite Java 25 native-access warning is a
+nonblocking follow-up; JVM flags unchanged. The whole OpenSpec change is
+not complete and Iteration 3 is not authorized.
+
+**Status:** READY_FOR_FINAL_EXTERNAL_REVIEW once documentation-closeout CI
+is green. No final independent reviewer PASS is claimed here.
