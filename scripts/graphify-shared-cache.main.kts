@@ -78,6 +78,7 @@ print(json.dumps(result))
                 check(output.contains("BootstrapResource") && output.contains("BootstrapMarker"))
                 // Graphify's extracted edges, not merely text matches, must prove
                 // that BootstrapResource.status() calls BootstrapMarker.status().
+                val nodeObjects = result["nodes"]!!.jsonArray.associate { it.jsonObject["id"]!!.jsonPrimitive.content to it.jsonObject }
                 val labels = result["nodes"]!!.jsonArray.associate {
                     it.jsonObject["id"]!!.jsonPrimitive.content to
                         (it.jsonObject["label"]?.jsonPrimitive?.content ?: "")
@@ -90,6 +91,11 @@ print(json.dumps(result))
                     val targetLabel = labels[target] ?: target
                     (sourceLabel.contains("status") || source.contains("status")) &&
                     (targetLabel.contains("status") || target.contains("status")) &&
+                    (nodeObjects[source]?.get("source_file")?.toString()?.contains("BootstrapResource.java") == true ||
+                        source.contains("BootstrapResource")) &&
+                    (nodeObjects[target]?.get("source_file")?.toString()?.contains("BootstrapMarker.java") == true ||
+                        target.contains("BootstrapMarker")) &&
+                    edge["relation"]?.jsonPrimitive?.content == "calls" &&
                     source != target
                 }
                 check(related.isNotEmpty()) {
