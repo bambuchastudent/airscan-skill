@@ -29,7 +29,7 @@ async def main():
             async def invoke(name,arguments):
                 response=await session.call_tool(name,arguments)
                 text="\n".join(getattr(c,"text","") for c in response.content)
-                assert not response.isError, f"{name}: {text}"
+                assert not response.is_error, f"{name}: {text}"
                 return text
             symbols=await invoke("find_symbol",{
                 "name_path_pattern":"BootstrapResource","relative_path":"src",
