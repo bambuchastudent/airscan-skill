@@ -279,7 +279,7 @@ jobs:
           restore-keys: graphify-deps-${{ runner.os }}-v2-
       - name: Install Java-capable Graphify
         run: |
-          python -m pip install 'graphifyy==0.1.14'
+          python -m pip install 'graphifyy==0.9.92'
           python -m pip show graphifyy
       - name: Build shared Graphify index and verify cache reuse
         run: |
@@ -292,6 +292,11 @@ jobs:
           assert first['cache_hit'] is False, 'First run must build graph'
           assert second['cache_hit'] is True, 'Second run must reuse graph'
           assert second['nodes'] >= 2 and second['edges'] >= 1
+          relationship=json.load(open('graphify-evidence/relationship.json'))
+          assert relationship['pass'] and relationship['matched_edges'], 'Graphify relationship query failed'
+          print('Graphify version:', second['version'])
+          print('Graphify relationship:', relationship)
+          print('Graphify cache cold/warm:', first['cache_hit'], second['cache_hit'])
           PY
       - name: Upload Graphify Java evidence
         if: always()
