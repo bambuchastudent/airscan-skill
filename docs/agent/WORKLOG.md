@@ -151,3 +151,7 @@ NOT VERIFIED: Graphify installed version, graph creation, impact lookup; Serena 
 - `07b888417504f2b6c1906da346143a523fc6e86f`: reconciled OpenSpec task checkboxes with verified CI and explicit pending tasks.
 
 **Current gate:** NEEDS_CHANGES. Do not merge PR #1 until Serena and final SHA evidence are green, then update memory, iteration and review report.
+
+## 2026-10-18 — Serena passed and CI cache enabled
+
+Commit `733714ab675ac744bf5ec1fb46c76dffb0bbd44f`, run https://github.com/bambuchastudent/airscan-skill/actions/runs/39124935556: all 8 jobs PASS, including real Serena MCP symbol/reference lookup. Maven, npm/pip, Kotlin, TLC, Alloy and Dafny caches enabled; concurrent obsolete runs cancelled. Remaining: documentation consistency, final SHA CI and independent review. Serena installed from unpinned upstream Git main; Graphify cache rebuilds all nodes on source changes. No merge.
