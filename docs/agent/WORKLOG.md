@@ -140,3 +140,14 @@ Branch: `ci/bootstrap-audit-gates` (not merged); PR: https://github.com/bambucha
 VERIFIED: GitHub Actions run https://github.com/bambuchastudent/airscan-skill/actions/runs/39121502784 at commit `1360c01134e9ed4c91adaa8d41c0607fbe36e480` completed with five successful jobs: `java-and-contract`, `openspec`, `alloy-bootstrap`, `tlc-bootstrap`, `dafny-bootstrap`. The Java job includes Maven Wrapper, Spotless, Checkstyle, Java 25/Quarkus HTTP and worker tests. Formal smokes are deliberately tiny toolchain examples, not proofs of AirScan product invariants. Dafny verifies a pure bootstrap decision function and builds Java via `dafny build --target:java`.
 
 NOT VERIFIED: Graphify installed version, graph creation, impact lookup; Serena activation, symbol references and status lookup. Neither tool is exposed through the available connected execution interfaces. These checks require actual external tool sessions with recorded output, not inferred results. Also pending: explicit runtime smoke of generated Dafny Java, and final evidence snapshot tied to final PR SHA after all gates are resolved. Status: NEEDS_CHANGES; not ready for external review.
+
+## 2026-10-18 — Kotlin cache, Dafny runtime, Serena integration (PR #1)
+
+- `14a85c0de5ff1444247aabbde2222c96dbbf4eb4`: Kotlin `.main.kts` Graphify shared-cache coordinator replaces Python orchestration. CI [39123970145](https://github.com/bambuchastudent/airscan-skill/actions/runs/39123970145) PASS (7 jobs).
+- `d2bc2b9c8293ca616f2a0f9a12f50b17d14bff56`: added Dafny Java runtime execution. CI [39124094544](https://github.com/bambuchastudent/airscan-skill/actions/runs/39124094544) PASS (7 jobs); Dafny logs show 2 verified, 0 errors, and `dafny run --target:java` succeeded.
+- `58b6d2843578720aca0183bc013819dadb86df34`: added Serena MCP Java semantic gate. CI [39124415407](https://github.com/bambuchastudent/airscan-skill/actions/runs/39124415407) FAILED due to conflicting `mcp<2` constraint (Serena requires MCP 2.2.0).
+- `4ce5fe781d2f378c142df85d3f52b91b6e0afd37`: removed MCP constraint. CI [39124470305](https://github.com/bambuchastudent/airscan-skill/actions/runs/39124470305) has 7 PASS and Serena FAIL because unsupported `--headless` option prevented MCP startup.
+- `8a6a27200829eabca539133631325200b687a018`: removed unsupported Serena flag; new CI evidence pending. No semantic Serena PASS claimed.
+- `07b888417504f2b6c1906da346143a523fc6e86f`: reconciled OpenSpec task checkboxes with verified CI and explicit pending tasks.
+
+**Current gate:** NEEDS_CHANGES. Do not merge PR #1 until Serena and final SHA evidence are green, then update memory, iteration and review report.
