@@ -1,4 +1,4 @@
-# Independent bootstrap audit — 2026-10-18
+# Bootstrap pre-audit findings — 2026-10-18
 
 ## Scope and evidence
 Repository: bambuchastudent/airscan-skill; PR #1; branch ci/bootstrap-audit-gates.
@@ -13,9 +13,9 @@ All eight jobs passed, including Serena semantic references, Graphify Java AST, 
 - **SCOPE LIMITATION:** Bootstrap formal models are bounded smoke checks; they do not prove future product invariants.
 - **PROCESS:** No product capability implementation or downstream route-topology change is authorized in this review.
 
-## Verdict
-NEEDS_CHANGES until Serena pin is resolved and final-SHA CI is green. This is a provisional independent evidence audit, not approval to merge.
+## Pre-audit status
+IMPLEMENTATION HANDOFF IN PROGRESS. These are implementer-identified findings, not an independent review verdict. A separate reviewer must issue PASS or NEEDS_CHANGES after inspecting the final commit and evidence.
 
-## Remediation after initial review
+## Remediation after pre-audit
 
 Commit `6fd0f23cdb8005f0a614b5d7e11b4bde3d7bdea2` pins Serena to upstream `d9e4c796fae0207ba6848d1df4b331122a5567b5`. The mutable-reference blocker is addressed in configuration but runtime compatibility and final-SHA green CI remain unverified. Verdict remains NEEDS_CHANGES pending CI and final evidence review.
