@@ -105,13 +105,12 @@ See [AGENTS.md](AGENTS.md) for mandatory agent behavior and [docs/TOOLING.md](do
 
 ## Development state
 
-The repository is currently in bootstrap/specification phase.
+The `bootstrap-agentic-foundation` change is complete, independently reviewed **PASS / READY**, and merged into `develop` as `a2e527c153f403ca47aabcec70a9460f75499909`.
 
-Pending OpenSpec changes are intentionally staged:
+The remaining OpenSpec changes are intentionally staged:
 
-1. `bootstrap-agentic-foundation`
-2. `add-distributed-control-plane`
-3. `add-route-topology`
-4. `add-durable-scan-retention`
+1. `add-distributed-control-plane` — **current implementation stage**
+2. `add-route-topology`
+3. `add-durable-scan-retention`
 
 Do not jump directly to provider mass-implementation. Apply and verify changes in dependency order.

@@ -4,7 +4,7 @@ This file is the curated durable memory for agents working on this repository. K
 
 ## Current state
 
-- Repository is in specification/bootstrap phase.
+- Bootstrap is complete and merged; the repository is entering implementation of `add-distributed-control-plane`.
 - Default branch: `develop`.
 - Production implementation language: Java, not Python.
 - Verified runtime baseline: Java 25 Temurin 25.0.4.1, Maven Wrapper 3.9.11, Quarkus 3.40.1.
@@ -75,12 +75,15 @@ OpenSpec tasks are not complete without deterministic evidence and iteration doc
 
 ## Active OpenSpec changes and intended order
 
-1. `bootstrap-agentic-foundation`
-2. `add-distributed-control-plane`
-3. `add-route-topology`
-4. `add-durable-scan-retention`
+Completed and archived: `bootstrap-agentic-foundation`.
 
-Do not mass-implement airline adapters before the first provider architecture and scan semantics are validated.
+Active dependency order:
+
+1. `add-distributed-control-plane`
+2. `add-route-topology`
+3. `add-durable-scan-retention`
+
+Current implementation target: `add-distributed-control-plane` only. Do not mass-implement airline adapters before the first provider architecture and scan semantics are validated.
 
 ## Current invariant areas
 
@@ -96,16 +99,15 @@ Initial invariant families:
 - atomic/monotonic snapshot publication;
 - deterministic top-N ranking.
 
-## Current verified bootstrap status (2026-10-18)
+## Completed bootstrap baseline (2026-10-18)
 
-- Java 25 Temurin, Quarkus 3.40.1, Maven Wrapper 3.9.11, REST/OpenAPI, independent worker boundary, Spotless and Checkstyle: VERIFIED.
-- OpenSpec 1.14.0 strict checks, Alloy 6.2.0, TLC 1.8.0, Dafny 4.11.0 verify/Java execution: VERIFIED.
-- Serena MCP `find_symbol` and `find_referencing_symbols`: VERIFIED, upstream commit pinned to `d9e4c796fae0207ba6848d1df4b331122a5567b5`.
-- Graphify `graphifyy==0.9.92`: **VERIFIED** at `ca8daf41` in CI 39126546579. Extracted `BootstrapResource.status() --calls--> BootstrapMarker.status()` edge (AST, inferred 0.85); 27 nodes/47 edges; cold/warm/changed-input cache `false/true/false`. Full rebuild on Java change, not per-file incremental.
-- Final technical implementation CI: [39126546579](https://github.com/bambuchastudent/airscan-skill/actions/runs/39126546579) **8/8 PASS** at `ca8daf41ba7efe62b6287f19d9f4f2ca0bdfa0dd`.
-- External first independent review: PASS for previous HEAD. Final independent technical review accepted implementation at `ca8daf41` but returned **NEEDS_CHANGES (process/evidence only)**: current evidence and canonical final review were missing. Documentation-only closeout addresses these findings; **final metadata-only review and CI on closeout HEAD remain pending**. Canonical report: `docs/reviews/bootstrap-agentic-foundation/2026-10-18T-final-review.md`.
-- PR #1 remains unmerged. Do not start `add-distributed-control-plane` before final independent verdict.
-- Follow-up only: immutable GitHub Actions SHA pins and downloaded binary SHA-256 checksums.
+- Final implementation HEAD: `ca8daf41ba7efe62b6287f19d9f4f2ca0bdfa0dd`; implementation CI `39126546579`: **8/8 PASS**.
+- Documentation/evidence closeout HEAD: `351c6835e003a3e5863d3632d77dd92566a25b45`; closeout CI `39127216895`: **8/8 PASS**.
+- Independent final verdict: **PASS / READY**.
+- PR #1 merged to `develop` as `a2e527c153f403ca47aabcec70a9460f75499909`.
+- Verified baseline: Java 25 Temurin 25.0.4.1, Maven Wrapper 3.9.11, Quarkus 3.40.1, REST/OpenAPI, independent worker boundary, Spotless, Checkstyle, OpenSpec 1.14.0, Alloy 6.2.0, TLC 1.8.0, Dafny 4.11.0, Serena pinned at `d9e4c796fae0207ba6848d1df4b331122a5567b5`, Graphify `0.9.92`.
+- Canonical review: `docs/reviews/bootstrap-agentic-foundation/2026-10-18T-final-review.md`.
+- Nonblocking hardening remains: immutable GitHub Actions SHA pins, checksums for downloaded formal-tool distributions, Serena LSP cache persistence, finer Graphify incremental updates, and branch protection.
 
 ## Future design decisions (not bootstrap blockers)
 

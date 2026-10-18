@@ -28,10 +28,12 @@
 - [x] 4.4 Run the complete documented bootstrap verification set plus strict OpenSpec validation, append exact results to WORKLOG.md, update MEMORY.md with verified versions/decisions, and create a bootstrap implementation iteration summary.
 - [x] 4.5 Create a self-contained review report for the bootstrap implementation commit range; do not start add-route-topology until the review has no blocking NEEDS_CHANGES findings.
 
-## Final implementation evidence and metadata-only release gate — 2026-10-18
+## Final implementation evidence — 2026-10-18
 
-- **Tasks 1.1–4.3:** implementation and deterministic CI evidence accepted.
-- **Task 4.4:** complete — final implementation HEAD `ca8daf41ba7efe62b6287f19d9f4f2ca0bdfa0dd`, [CI 39126546579](https://github.com/bambuchastudent/airscan-skill/actions/runs/39126546579), **8/8 PASS**. Exact versions, commands, Graphify relationship and cache results recorded in `docs/agent/WORKLOG.md`, `docs/agent/MEMORY.md`, `docs/TOOLING.md` and `docs/agent/iterations/bootstrap-2026-10-18.md`.
-- **Task 4.5:** canonical final independent technical review package exists at `docs/reviews/bootstrap-agentic-foundation/2026-10-18T-final-review.md`, covering baseline `d424d400c846f574a729d430f492b932396cd444` through reviewed implementation HEAD `ca8daf41ba7efe62b6287f19d9f4f2ca0bdfa0dd`. Final reviewer accepted the technical implementation, requesting only this evidence/process closeout. Earlier draft and independent review are retained as historical evidence.
-- **Release gate remains PENDING:** obtain green 8/8 CI for documentation-only closeout HEAD, then request final **metadata-only independent PASS**. The checked tasks describe completed deliverables, **not** permission to merge or begin downstream work.
-- Nonblocking future work: immutable action SHA pins, formal-tool distribution checksums, Serena LSP cache persistence, finer Graphify incremental updates, develop branch protection.
+- **Tasks 1.1–4.5:** complete with deterministic implementation/evidence and independent review.
+- Final implementation HEAD `ca8daf41ba7efe62b6287f19d9f4f2ca0bdfa0dd`; CI `39126546579`: **8/8 PASS**.
+- Documentation/evidence closeout HEAD `351c6835e003a3e5863d3632d77dd92566a25b45`; CI `39127216895`: **8/8 PASS**.
+- Independent final verdict: **PASS / READY**.
+- PR #1 merged to `develop` as `a2e527c153f403ca47aabcec70a9460f75499909`.
+- Canonical review: `docs/reviews/bootstrap-agentic-foundation/2026-10-18T-final-review.md`.
+- Nonblocking future hardening: immutable action SHA pins, formal-tool distribution checksums, Serena LSP cache persistence, finer Graphify incremental updates, branch protection.
