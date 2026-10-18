@@ -215,14 +215,23 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install Kotlin scripting runtime
+        run: |
+          curl -fsSL -o /tmp/kotlin-compiler.zip https://github.com/JetBrains/kotlin/releases/download/v2.2.21/kotlin-compiler-2.2.21.zip
+          unzip -q /tmp/kotlin-compiler.zip -d /tmp/kotlin-runtime
+          echo "/tmp/kotlin-runtime/kotlinc/bin" >> "$GITHUB_PATH"
       - name: Install Java-capable Graphify
         run: |
           python -m pip install 'graphifyy==0.1.14'
           python -m pip show graphifyy
       - name: Build shared Graphify index and verify cache reuse
         run: |
-          python scripts/graphify-shared-cache.py --root . --cache-dir /tmp/airscan-shared-graph --output graphify-evidence | tee /tmp/graphify-first.json
-          python scripts/graphify-shared-cache.py --root . --cache-dir /tmp/airscan-shared-graph --output graphify-evidence | tee /tmp/graphify-second.json
+          kotlin scripts/graphify-shared-cache.main.kts --root . --cache-dir /tmp/airscan-shared-graph --output graphify-evidence | tee /tmp/graphify-first.json
+          kotlin scripts/graphify-shared-cache.main.kts --root . --cache-dir /tmp/airscan-shared-graph --output graphify-evidence | tee /tmp/graphify-second.json
           python - <<'PY'
           import json
           first=json.load(open('/tmp/graphify-first.json'))
