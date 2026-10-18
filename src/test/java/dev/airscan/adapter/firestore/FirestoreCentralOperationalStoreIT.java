@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 /** Only invoked with the explicit firestore-emulator Maven profile and CI emulator process. */
 class FirestoreCentralOperationalStoreIT {
   @Test
-  void recordSurvivesNewClientAndAdapterInstanceInEmulator() {
+  void recordSurvivesNewClientAndAdapterInstanceInEmulator() throws Exception {
     String host = System.getenv("FIRESTORE_EMULATOR_HOST");
     assertNotNull(host, "The mandatory emulator must be started explicitly");
     String project = System.getenv("AIRSCAN_TEST_PROJECT_ID");
