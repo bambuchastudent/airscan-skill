@@ -53,6 +53,16 @@ jobs:
             echo 'BLOCKER: uncaught runtime exception in Maven/Quarkus logs' >&2
             exit 1
           fi
+      - name: Upload Maven diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bootstrap-maven-diagnostics
+          path: |
+            maven-verify.log
+            target/surefire-reports/**
+            worker/target/surefire-reports/**
+          if-no-files-found: warn
       - name: Verify real Quarkus test results
         shell: bash
         run: |
