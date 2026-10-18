@@ -45,6 +45,17 @@ jobs:
           fi
       - name: Independent worker bootstrap
         run: bash mvnw -B -ntp -f worker/pom.xml clean verify
+      - name: Execute worker entrypoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual=$(java -cp worker/target/classes dev.airscan.worker.WorkerBootstrap)
+          test "$actual" = 'airscan-worker-bootstrap ready'
+      - name: Verify tracked secret and runtime artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          git ls-files | grep -Ei '(^|/)(\.env($|\.)|[^/]*service.account[^/]*\.json$|[^/]*credentials[^/]*\.json$|[^/]*\.(sqlite|sqlite3|db)$|target/)' && exit 1 || test "${PIPESTATUS[0]}" -eq 1
       - name: Inspect worker dependencies
         run: bash mvnw -B -ntp -f worker/pom.xml dependency:tree
 
