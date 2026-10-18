@@ -11,6 +11,7 @@
     <compiler-plugin.version>3.14.1</compiler-plugin.version>
     <surefire-plugin.version>3.5.4</surefire-plugin.version>
     <spotless-plugin.version>2.46.1</spotless-plugin.version>
+    <argLine></argLine>
   </properties>
   <dependencyManagement>
     <dependencies>
