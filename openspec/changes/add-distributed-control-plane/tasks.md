@@ -2,9 +2,9 @@
 
 ## 1. Runtime boundaries and API
 
-- [ ] 1.1 Define control-plane and crawler-worker runtime boundaries without duplicating domain logic; verify clean build/tests for both runtime roles.
-- [ ] 1.2 Define versioned REST/OpenAPI application/query contracts and verify generated/served OpenAPI schema in deterministic tests.
-- [ ] 1.3 Add the MCP adapter boundary over shared application/query services with a contract test proving it does not bypass application semantics; do not implement travel-specific MCP tools beyond what existing application services support.
+- [x] 1.1 Define control-plane and crawler-worker runtime boundaries without duplicating domain logic; verify clean build/tests for both runtime roles.
+- [x] 1.2 Define versioned REST/OpenAPI application/query contracts and verify generated/served OpenAPI schema in deterministic tests.
+- [x] 1.3 Add the MCP adapter boundary over shared application/query services with a contract test proving it does not bypass application semantics; do not implement travel-specific MCP tools beyond what existing application services support.
 
 ## 2. Central and worker persistence
 
@@ -29,5 +29,5 @@
 ## 5. End-to-end verification
 
 - [ ] 5.1 Run a local/emulated end-to-end scenario where a worker leases synthetic work, stores a temporary outbox record, submits the same result batch twice, and the control plane retains one logical ingestion.
-- [ ] 5.2 Verify the read/query REST endpoint works independently of MCP and the MCP adapter returns semantics from the same application service.
+- [x] 5.2 Verify the read/query REST endpoint works independently of MCP and the MCP adapter returns semantics from the same application service.
 - [ ] 5.3 Run Maven tests, OpenSpec strict validation, relevant Graphify/Serena impact review, and update WORKLOG/MEMORY/iteration report before external review.
