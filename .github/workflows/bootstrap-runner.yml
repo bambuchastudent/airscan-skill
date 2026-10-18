@@ -146,3 +146,17 @@ jobs:
         run: curl --fail --location --retry 3 --output /tmp/tla2tools.jar https://github.com/tlaplus/tlaplus/releases/download/v1.8.0/tla2tools.jar
       - name: Check finite bootstrap gate
         run: java -cp /tmp/tla2tools.jar tlc2.TLC -config formal/bootstrap/BootstrapGate.cfg formal/bootstrap/BootstrapGate.tla
+
+  alloy-bootstrap:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Download Alloy command line distribution
+        run: curl --fail --location --retry 3 --output /tmp/alloy.jar https://github.com/AlloyTools/org.alloytools.alloy/releases/download/v6.2.0/org.alloytools.alloy.dist.jar
+      - name: Bounded Alloy checks
+        run: java -jar /tmp/alloy.jar exec -c '*' -o /tmp/alloy-results formal/bootstrap/BootstrapGate.als
