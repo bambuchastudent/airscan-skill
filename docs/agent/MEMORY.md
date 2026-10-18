@@ -4,7 +4,7 @@ This file is the curated durable memory for agents working on this repository. K
 
 ## Current state
 
-- Bootstrap is complete and merged; the repository is entering implementation of `add-distributed-control-plane`.
+- Bootstrap is complete and merged. `add-distributed-control-plane` Iteration 1 is implemented in draft PR #3, code HEAD `0dc8b112f62593d49ee77242e62affa5fb155f25`; CI `39137373107` 8/8 PASS. External independent review remains pending; Iteration 2 is not authorized.
 - Default branch: `develop`.
 - Production implementation language: Java, not Python.
 - Verified runtime baseline: Java 25 Temurin 25.0.4.1, Maven Wrapper 3.9.11, Quarkus 3.40.1.
@@ -83,7 +83,7 @@ Active dependency order:
 2. `add-route-topology`
 3. `add-durable-scan-retention`
 
-Current implementation target: `add-distributed-control-plane` only. Do not mass-implement airline adapters before the first provider architecture and scan semantics are validated.
+Current review gate: `add-distributed-control-plane` Iteration 1 only; no Iteration 2 until independent review. Do not mass-implement airline adapters before the first provider architecture and scan semantics are validated.
 
 ## Current invariant areas
 
@@ -111,10 +111,20 @@ Initial invariant families:
 
 ## Future design decisions (not bootstrap blockers)
 
-- Worker authentication choice (OIDC vs project token) belongs to `add-distributed-control-plane`.
+- Worker authentication design (Iteration 1): first local/dev scoped worker token behind future identity verifier; Google-hosted workers should use short-lived OIDC; no verifier, token issuance, worker API or Cloud Run ingress implementation exists yet.
 - Firestore/Cloud Run/Storage deployment region/cost requires deployment-time validation.
 - First topology and fare adapters and route inactivity thresholds belong to future changes.
 
 ## Historical bootstrap remediation notes
 
 Earlier CI failures, unverified tool statuses, Serena CLI incompatibility and mutable upstream dependency were resolved before CI 39126546579. For chronological evidence consult `docs/agent/WORKLOG.md`. This curated memory intentionally omits superseded state.
+
+## Distributed control plane — Iteration 1 review candidate (2026-10-18)
+
+- Existing artifacts remain root Quarkus (application/REST/MCP dispatch) and independent `worker/` plain Java; no shared Maven module until a real worker protocol requires one.
+- `CapabilitiesService.current()` returns a domain-neutral `CapabilitiesSnapshot`; REST `GET /api/v1/capabilities` and in-process `McpCapabilitiesAdapter` both invoke this same service. MCP JSON-RPC transport is **not** deployed.
+- Deterministic sentinel substitution proves REST/MCP application parity; served OpenAPI, 7 control-plane tests and 1 worker test pass in CI `39137373107`.
+- Graphify `calls` edges confirm REST/MCP to application service; Serena Java symbols/references confirm both uses. Verified details in WORKLOG and iteration report.
+- Worker auth is **design-only**: scoped local/dev token first; future Cloud Run Job OIDC verifier. Worker/job/lease/batch identities are specified direction, not implemented protocol.
+- 1.1, 1.2, 1.3 and synthetic 5.2 boundary verified; 3.3 design and 5.3 iteration-level verification partial for the broader change.
+- PR #3 remains a draft. External independent review and Iteration 1 acceptance are pending; do not proceed to persistence/Iteration 2 automatically.

@@ -186,3 +186,74 @@ Second independent review found unsupported `graphifyy==0.1.14` and contradictor
 - Post-merge cleanup updates current-state documentation and archives the completed OpenSpec change under `openspec/changes/archive/2026-10-18-bootstrap-agentic-foundation/`.
 - No runtime/product behavior is changed by this cleanup.
 - Next active change: `add-distributed-control-plane`. Do not begin `add-route-topology` or `add-durable-scan-retention` until the control-plane change passes its own external review.
+
+## 2026-10-18T14:46Z — distributed-control-plane Iteration 1 runtime/API/MCP boundary
+
+**Actor:** ChatGPT implementation orchestrator (external independent review still required).
+**Change:** `add-distributed-control-plane`; targets 1.1, 1.2, 1.3, 5.2; 3.3 design portion and 5.3 iteration verification only.
+**Base:** `56c35812360d392a436b3e8f2df51bcd296948d5` (`develop`).
+**Reviewed code HEAD:** `0dc8b112f62593d49ee77242e62affa5fb155f25`.
+**Branch/PR:** `feat/add-distributed-control-plane-iteration-1`, PR #3 (draft, not merged).
+**Implementation commits:** `f9a42095b0089a20cb752a60cb5b0e2fd200dcfe`,
+`9cfc4ee17e8b750ce832c620f4f3f430373b038a`,
+`0dc8b112f62593d49ee77242e62affa5fb155f25`.
+
+**Intent/diff:** Root Quarkus gets `CapabilitiesService`/`CapabilitiesSnapshot`,
+`GET /api/v1/capabilities` with served OpenAPI, and an MCP-shaped in-process
+tool-dispatch adapter over the identical application service. Real sentinel-mock
+parity contract tests verify the HTTP and MCP paths invoke the service. Kept
+plain-Java worker build/runtime independent, with no shared Maven module.
+Added `quarkus-rest-jackson` and test-only `quarkus-junit5-mockito`.
+Extended Graphify/Serena checks to inspect both new call paths; wrote Option A
+scoped local worker token vs Option B Cloud Run Job OIDC design and threat model.
+No worker protocol or storage was implemented.
+
+**Pre-change verification (same base commit):** GitHub Actions
+[39128494433](https://github.com/bambuchastudent/airscan-skill/actions/runs/39128494433)
+8/8 PASS, including strict archived/active OpenSpec, Graphify 0.9.92 and pinned Serena.
+Graphify reported the existing `BootstrapResource.status -> BootstrapMarker.status`
+call; Serena returned the corresponding semantic reference.
+
+**Candidate verification at code HEAD `0dc8b112...`:** GitHub Actions
+[39137373107](https://github.com/bambuchastudent/airscan-skill/actions/runs/39137373107)
+**8/8 PASS**, observed completed, exact checks:
+
+- `./mvnw -B -ntp spotless:check` — **PASS**.
+- `./mvnw -B -ntp checkstyle:check` — **PASS**.
+- `./mvnw -B -ntp clean verify` — **PASS**; 7 Quarkus/JUnit tests, 0 failures/errors/skips, including real HTTP/OpenAPI and mocked REST/MCP parity.
+- `./mvnw -B -ntp -f worker/pom.xml clean verify` — **PASS**; 1 worker test, 0 failures/errors/skips; separate worker entrypoint execution PASS.
+- `openspec validate --archived --strict` — **PASS**.
+- `openspec validate --changes --strict` — **PASS**.
+- `kotlin scripts/graphify-shared-cache.main.kts --root . --cache-dir /tmp/airscan-shared-graph --output graphify-evidence` (cold/warm/mutated source) — **PASS**; Graphify `graphifyy==0.9.92`, cache `false/true/false`. Extracted separate `calls` edges `CapabilitiesResource.current -> CapabilitiesService.current` (resource line 23) and `McpCapabilitiesAdapter.callTool -> CapabilitiesService.current` (adapter line 42). AST inference confidence 0.85; not a compiler-level proof.
+- `kotlin scripts/serena-semantic-smoke.main.kts` — **PASS**; pinned Serena `d9e4c796fae0207ba6848d1df4b331122a5567b5`, semantic `find_symbol` and `find_referencing_symbols` confirming both application-service references.
+- `python3 scripts/java-symbol-smoke.py --root . --output java-symbol-evidence` — **PASS**.
+- `java -jar /tmp/alloy.jar exec -c '*' -o /tmp/alloy-results formal/bootstrap/BootstrapGate.als` — **PASS**; existing bounded bootstrap gate, Alloy 6.2.0.
+- `java -cp /tmp/tla2tools.jar tlc2.TLC -config formal/bootstrap/BootstrapGate.cfg formal/bootstrap/BootstrapGate.tla` — **PASS**; existing finite bootstrap model, TLC 1.8.0.
+- `dafny verify formal/bootstrap/BootstrapGate.dfy`, `dafny build --target:java ...`, `dafny run --target:java ...` — **PASS**; unchanged bootstrap proof gate, Dafny 4.11.0.
+- Git tracked-secret/runtime-artifact shell check (`git ls-files | grep -Ei ...`) — **PASS** (no forbidden tracked files).
+- `./mvnw -B -ntp -f worker/pom.xml dependency:tree` — **PASS**.
+
+**Failure/remediation:** First candidate `f9a42095...` CI
+[39137095805](https://github.com/bambuchastudent/airscan-skill/actions/runs/39137095805)
+hit **FAILED** Spotless on a long OpenAPI test assertion and was superseded/cancelled;
+`9cfc4ee1...` fixed the exact formatting finding and CI
+[39137172791](https://github.com/bambuchastudent/airscan-skill/actions/runs/39137172791)
+finished **8/8 PASS**. Then `0dc8b112...` added direct Graphify/Serena
+impact verification and passed 8/8. These are separate runs, not cumulative claims.
+
+**Versions observed:** Java Temurin 25.0.4.1; Maven Wrapper 3.9.11;
+Quarkus 3.40.1; OpenSpec 1.14.0; Graphify 0.9.92; Serena pinned
+`d9e4c796...`; Alloy 6.2.0; TLC 1.8.0; Dafny 4.11.0.
+CI runners supply Java 25 and dependencies; local assistant container has Java 21
+and no GitHub network/DNS, so local Maven/OpenSpec/Graphify/Serena command execution
+was **NOT VERIFIED**. All PASS results above come from named GitHub Actions runs.
+
+**Scope exclusions/limitations:** no Firestore, SQLite, Cloud Storage,
+lease, heartbeat, ingestion, retry, worker credentials/auth implementation, deployed
+MCP transport, hosting, scheduling, travel route/fare logic or new state-machine
+invariant. Bootstrap formal-model PASS does not verify future distributed protocol.
+No Google cloud authentication behavior tested. This entry documents code HEAD,
+not a claim that this documentation closeout commit has already passed CI.
+
+**Next:** review narrow Iteration 1 PR independently. Do not merge/mark
+change complete/archive or begin Iteration 2 before that review.
