@@ -55,7 +55,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git ls-files | grep -Ei '(^|/)(\.env($|\.)|[^/]*service.account[^/]*\.json$|[^/]*credentials[^/]*\.json$|[^/]*\.(sqlite|sqlite3|db)$|target/)' && exit 1 || test "${PIPESTATUS[0]}" -eq 1
+          if git ls-files | grep -Ei '(^|/)(\.env($|\.)|[^/]*service.account[^/]*\.json$|[^/]*credentials[^/]*\.json$|[^/]*\.(sqlite|sqlite3|db)$|target/)'; then
+            echo 'Tracked runtime artifact or possible credential' >&2
+            exit 1
+          fi
       - name: Inspect worker dependencies
         run: bash mvnw -B -ntp -f worker/pom.xml dependency:tree
 
