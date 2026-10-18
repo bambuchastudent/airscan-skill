@@ -109,3 +109,8 @@ Initial invariant families:
 ## Next step
 
 Apply and verify `bootstrap-agentic-foundation` only. Its structure must preserve control-plane and crawler-worker runtime roles but must not provision production cloud resources. After external review, the next intended change is `add-distributed-control-plane`.
+
+
+## Bootstrap implementation update (2026-10-18)
+
+GitHub Actions on ubuntu-24.04 is the canonical verification environment. Run 39113553968 verified Java 25, Maven 3.10.0 and strict OpenSpec validation. Maven `verify` was skipped because the project did not yet have a POM. A subsequent series of commits added a Quarkus 3.27.2 POM, CDI bootstrap marker, REST/OpenAPI dependency, bootstrap status endpoint and tests. Those later commits have **no observed build/test evidence yet**. No production capability or worker protocol is implemented. Graphify, Serena, Alloy, TLC, and Dafny are pending. Continue bootstrap only; review GitHub Actions before reporting PASS.
