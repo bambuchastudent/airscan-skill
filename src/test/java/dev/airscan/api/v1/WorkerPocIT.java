@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.airscan.application.worker.WorkerProtocolStore;
+import dev.airscan.worker.WorkerPocClient;
 import dev.airscan.worker.outbox.OutboxEnvelope;
 import dev.airscan.worker.outbox.SqliteOutbox;
 import io.quarkus.test.junit.QuarkusTest;
@@ -17,6 +18,7 @@ import jakarta.inject.Inject;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
@@ -78,8 +80,13 @@ class WorkerPocIT {
   @Test
   void lostAcknowledgementReopenRetryAndQueryProvesOneLogicalAcceptance() throws Exception {
     String job = runtime.service().seedSyntheticJob("poc-lost-ack");
-    var lease = lease(job, "worker-a");
-    assertEquals("worker-a", lease.workerId());
+    var client =
+        new WorkerPocClient(
+            URI.create("http://localhost:" + io.restassured.RestAssured.port),
+            bearer("worker-a").substring(7));
+    var lease = client.lease(job);
+    String leaseId = lease.path("leaseId").asText();
+    assertEquals("worker-a", lease.path("workerId").asText());
     Path database = temp.resolve("outbox.sqlite");
     String batch = UUID.randomUUID().toString();
     String payload = "{\"kind\":\"synthetic\",\"value\":7}";
@@ -89,28 +96,27 @@ class WorkerPocIT {
       assertEquals(envelope, workerProcessA.pending().getFirst());
     }
 
-    var first = submit(job, lease.leaseId(), batch, "worker-a", payload);
+    var first = client.submit(job, leaseId, envelope);
     // Deliberately discard the response. No outbox acceptance acknowledgement.
     try (var workerProcessB = new SqliteOutbox(database)) {
       assertEquals(envelope, workerProcessB.pending().getFirst());
-      var repeated = submit(job, lease.leaseId(), batch, "worker-a", payload);
+      var restartedClient =
+          new WorkerPocClient(
+              URI.create("http://localhost:" + io.restassured.RestAssured.port),
+              bearer("worker-a").substring(7));
+      var repeated = restartedClient.submit(job, leaseId, workerProcessB.pending().getFirst());
       assertEquals(first, repeated);
-      var queried =
-          given()
-              .get("/api/v1/synthetic/accepted/" + job)
-              .then()
-              .statusCode(200)
-              .extract()
-              .as(WorkerProtocolStore.Accepted.class);
+      var queried = restartedClient.queryAccepted(job);
       assertEquals(first, queried);
-      assertEquals(job, queried.jobId());
-      assertEquals(batch, queried.batchId());
-      assertEquals(64, queried.archive().sha256().length());
-      assertEquals("gzip", queried.archive().compression());
-      assertEquals("synthetic-poc", queried.archive().sourceId());
-      assertEquals(batch, queried.archive().batchId());
+      assertEquals(job, queried.path("jobId").asText());
+      assertEquals(batch, queried.path("batchId").asText());
+      assertEquals(64, queried.path("archive").path("sha256").asText().length());
+      assertEquals("gzip", queried.path("archive").path("compression").asText());
+      assertEquals("synthetic-poc", queried.path("archive").path("sourceId").asText());
+      assertEquals(batch, queried.path("archive").path("batchId").asText());
       Path object =
-          Path.of(System.getenv("AIRSCAN_POC_ARCHIVE_DIR")).resolve(queried.archive().objectKey());
+          Path.of(System.getenv("AIRSCAN_POC_ARCHIVE_DIR"))
+              .resolve(queried.path("archive").path("objectKey").asText());
       assertTrue(Files.isRegularFile(object));
       workerProcessB.markAccepted(batch);
     }
