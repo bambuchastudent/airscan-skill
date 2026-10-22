@@ -153,12 +153,12 @@ class WorkerPocIT {
   void emulatorConcurrentLeaseAndDuplicateSubmissionAreAuthoritativelyUnique()
       throws Exception {
     String job = runtime.service().seedSyntheticJob("poc-concurrent");
-    var start = new CountDownLatch(1);
+    var leaseGate = new CountDownLatch(1);
     var executor = Executors.newFixedThreadPool(2);
     try {
       Future<io.restassured.response.Response> a =
           executor.submit(() -> {
-            start.await();
+            leaseGate.await();
             return given().contentType(ContentType.JSON)
                 .header("Authorization", bearer("worker-a"))
                 .body(new WorkerProtocolResource.LeaseRequest(job))
@@ -166,13 +166,13 @@ class WorkerPocIT {
           });
       Future<io.restassured.response.Response> b =
           executor.submit(() -> {
-            start.await();
+            leaseGate.await();
             return given().contentType(ContentType.JSON)
                 .header("Authorization", bearer("worker-b"))
                 .body(new WorkerProtocolResource.LeaseRequest(job))
                 .post("/api/v1/worker/leases");
           });
-      start.countDown();
+      leaseGate.countDown();
       var responses = java.util.List.of(a.get(), b.get());
       assertEquals(1, responses.stream().filter(x -> x.statusCode() == 200).count());
       assertEquals(1, responses.stream().filter(x -> x.statusCode() == 409).count());
@@ -181,8 +181,7 @@ class WorkerPocIT {
       var acquired = winner.as(WorkerProtocolStore.Lease.class);
       String batch = UUID.randomUUID().toString();
       String payload = "{\"kind\":\"synthetic\",\"value\":42}";
-      start = new CountDownLatch(1);
-      var go = start;
+      var go = new CountDownLatch(1);
       Future<WorkerProtocolStore.Accepted> first =
           executor.submit(() -> {
             go.await();
