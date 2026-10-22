@@ -286,3 +286,113 @@ CI [39148837864](https://github.com/bambuchastudent/airscan-skill/actions/runs/3
 **9/9 PASS**, including 3 archive tests, 11 root tests, 2 worker tests,
 1 Firestore emulator integration test, Graphify/Serena and existing formal gates.
 No worker protocol, central storage, authentication or deployment behavior changed.
+
+## Local authenticated worker protocol POC (2026-10-23)
+
+Iteration 2 was independently accepted and PR #4 merged at
+`7b693d97d15c0f8642ca2c08ce6ece36bfaa4d18`, the verified
+base for draft POC PR #5. No Google deployment, real GCS adapter, fare,
+route, retention or snapshot publication was added.
+
+### REST/OpenAPI contract, authority and identities
+
+Local synthetic POC only. Canonical HTTP paths:
+- `POST /api/v1/worker/leases`: `{jobId}` → `{jobId,leaseId,workerId,expiresAt}`;
+- `POST /api/v1/worker/leases/{jobId}/heartbeat`: `{leaseId}` → same
+  immutable lease ID with server-extended `expiresAt`;
+- `POST /api/v1/worker/results`:
+  `{jobId,leaseId,batchId,normalizedPayload}` → immutable accepted receipt;
+- `POST /api/v1/worker/failures`:
+  `{jobId,leaseId,classification}` → `{status:"RECOVERABLE"}`;
+- `GET /api/v1/synthetic/accepted/{jobId}`: accepted receipt containing
+  batch identity, normalized content hash, accepted timestamp and archive
+  provenance, 404 until accepted.
+
+The control plane seeds a UUID synthetic job using
+`WorkerProtocolService.seedSyntheticJob` in the local integration harness,
+**not through an unprotected seeding endpoint**. Firestore is authoritative
+for job status and current lease identity. Lease ID is a fresh server UUID;
+`workerId` is derived from `WorkerIdentityVerifier`, not a request
+header. The client's stable `batchId` stays in the SQLite
+PENDING/ACCEPTED outbox across restarts. This POC does not define
+route/provider semantics. REST adapters delegate to shared application service.
+
+### Local auth
+
+`LocalTokenWorkerIdentityVerifier` receives a map of bearer token →
+typed `WorkerPrincipal` from runtime configuration, with fail-closed
+401 for missing/wrong token and 403 for wrong principal on an active lease.
+The CI fixture generates two random 192-bit tokens into a permission-restricted
+temporary file (`AIRSCAN_POC_WORKERS_FILE` passes **only its path**, never
+secret values as Actions environment metadata); no literal token exists in
+source or CI logs. POC application bootstrapping fails 503 without
+`FIRESTORE_EMULATOR_HOST`, `AIRSCAN_TEST_PROJECT_ID`,
+`AIRSCAN_POC_ARCHIVE_DIR` and the local secret file. No ADC or
+service-account access is required; POC runtime cannot accidentally use
+production Firestore. This local/dev verifier is not a production
+multi-tenant auth/rotation service. Google OIDC remains a separate future
+deployment verifier with issuer/audience/expiry/principal mapping.
+
+### Lease and idempotent central state
+
+`FirestoreWorkerProtocolStore` keeps a single
+`poc_worker_jobs/{jobId}` document. Lease creation, renewal,
+classified recoverable failure and acceptance are Firestore transactions;
+a new active lease cannot coexist with an unexpired lease. Expired
+leases become eligible for reacquisition. Heartbeat and result verify
+server-known principal, existing lease and expiry; worker-supplied
+expiry and worker ID are ignored. Failure types
+`SOURCE_TRANSPORT` and `WORKER_INTERNAL` return the job to READY
+without publishing successful or negative route evidence.
+
+A first accepted synthetic JSON record (`{"kind":"synthetic","value":7}`)
+is normalized and SHA-256-hashed, archived with immutable gzip reference
+through `ObservationArchive`, then committed centrally in a Firestore
+transaction. The authoritative single-job acceptance record enforces
+the tuple `(jobId,leaseId,batchId)` and normalized content hash plus
+worker ownership. Concurrent duplicates resolve to the same stored
+`Accepted`; collisions or principal changes fail. A replay of the
+same committed batch is accepted even after the original lease expires,
+because the server checks committed receipt identity before requiring
+an active lease; this is crucial to surviving a lost acknowledgment.
+A crash after archive publication but before Firestore commit may leave
+an orphan immutable archive object; retry safely republishes/validates
+the same content-addressed object and commits at most one logical
+ingestion. The archive's SHA-256 is not the authority for ingestion.
+
+`WorkerPocClient` is compiled and tested in the independent worker
+Maven artifact, with java.net.http HTTPS and localhost-only HTTP for
+emulators. It has no Google SDK dependency. The root integration-test
+Maven build includes worker Java sources **only as test sources**, never
+in the root production application classpath. SQLite PENDING → ACCEPTED
+remains unchanged, with no IN_FLIGHT or strict FIFO sequence.
+
+### Emulator and formal scope
+
+The mandatory `firestore-emulator` CI job uses a pinned gcloud
+550.0.0 + Firestore emulator, creates temp token and archive fixtures,
+and fails if fewer than 5 Failsafe tests execute (1 existing Firestore
+persistence IT + 4 new WorkerPocIT scenarios). These exercise actual
+Quarkus HTTP transport → application → emulator, worker HTTP client,
+worker SQLite close/reopen and immutable local archive. Real Firestore
+transactions are involved in concurrent two-worker leasing and duplicate
+submissions. `GET /api/v1/synthetic/accepted` verifies the committed
+accepted receipt; no mocks stand in for the central persistence.
+
+**Formal decision:** INV-SCAN-001 and INV-SCAN-002 are operational
+safety/recovery candidates. The POC's exact scope is a single synthetic
+job document, with short transactional state transitions, a fake
+clock driving expiry tests without sleeping and real emulator
+concurrency tests. Existing Alloy/TLC/Dafny bootstrap gates still run
+but do **not** prove this protocol. A full TLA+/TLC scheduler/fairness
+model belongs to `add-durable-scan-retention` when multi-job queues
+and real scheduling semantics are defined, rather than a ceremonial
+model of one synthetic document. An external reviewer may require
+additional bounded concurrency proof before cloud deployment.
+
+**Limitations:** A publicly readable accepted synthetic receipt is
+acceptable only for the isolated local emulator; before exposure on
+the internet, impose appropriate query authorization/ingress.
+Local test-supplied tokens are not production identity. No persistent
+external scheduler, backup, distributed archive-to-Firestore atomic
+commit, OIDC verifier, Cloud Run, real GCS, fares or topology exists.

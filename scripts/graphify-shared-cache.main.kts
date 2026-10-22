@@ -141,12 +141,38 @@ print(json.dumps(result))
                 check(persistenceEdges.any {
                     it["source"]?.jsonPrimitive?.content?.lowercase()?.contains("localgzipobservationarchive") == true
                 }) { "Graphify missing local archive call edge" }
+                // Local POC: inspect extracted call edges for both protocol layers.
+                // Preserve the exact graph nodes for independent review, not only file grep.
+                val pocSymbols = listOf(
+                    "WorkerProtocolResource", "WorkerProtocolService",
+                    "WorkerProtocolStore", "FirestoreWorkerProtocolStore",
+                    "WorkerPocClient", "LocalTokenWorkerIdentityVerifier")
+                for (symbol in pocSymbols) {
+                    check(output.contains(symbol)) { "Graphify missing worker POC symbol: $symbol" }
+                }
+                val pocEdges = relationships.filter { edge ->
+                    val source = edge["source"]?.jsonPrimitive?.content?.lowercase() ?: ""
+                    edge["relation"]?.jsonPrimitive?.content == "calls" &&
+                        (source.contains("workerprotocolresource") ||
+                            source.contains("workerprotocolservice") ||
+                            source.contains("workerpocclient") ||
+                            source.contains("firestoreworkerprotocolstore"))
+                }
+                for (owner in listOf(
+                    "workerprotocolresource", "workerprotocolservice",
+                    "workerpocclient", "firestoreworkerprotocolstore")) {
+                    check(pocEdges.any { edge ->
+                        edge["source"]?.jsonPrimitive?.content?.lowercase()?.contains(owner) == true
+                    }) { "Graphify missing calls originating at $owner" }
+                }
                 val relationshipEvidence = buildJsonObject {
                     put("query", "status() -> status() (distinct Graphify graph nodes)")
                     put("matched_edges", JsonArray(related))
                     put("application_service_edges", JsonArray(applicationEdges))
                     put("persistence_symbols", JsonArray(persistenceSymbols.map { JsonPrimitive(it) }))
                     put("persistence_edges", JsonArray(persistenceEdges))
+                    put("poc_symbols", JsonArray(pocSymbols.map { JsonPrimitive(it) }))
+                    put("poc_edges", JsonArray(pocEdges))
                     put("pass", true)
                 }
                 writeAtomic(cache.resolve("relationship.json"), relationshipEvidence.toString())

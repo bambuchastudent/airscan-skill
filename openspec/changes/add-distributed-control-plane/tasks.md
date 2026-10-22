@@ -14,9 +14,9 @@
 
 ## 3. Worker protocol
 
-- [ ] 3.1 Define authenticated worker lease/heartbeat/result protocol with stable worker/job/lease/batch identities and explicit failure semantics.
-- [ ] 3.2 Implement idempotent result submission and verify repeated submission of the same accepted batch produces no duplicate logical ingestion.
-- [ ] 3.3 Evaluate local-worker and Cloud Run Job authentication options, record the selected minimal mechanism and threat model, and verify secrets/credentials are excluded from git.
+- [x] 3.1 Define authenticated worker lease/heartbeat/result protocol with stable worker/job/lease/batch identities and explicit failure semantics.
+- [x] 3.2 Implement idempotent result submission and verify repeated submission of the same accepted batch produces no duplicate logical ingestion.
+- [x] 3.3 Evaluate local-worker and Cloud Run Job authentication options, record the selected minimal mechanism and threat model, and verify secrets/credentials are excluded from git.
 
 ## 4. Google deployment
 
@@ -28,6 +28,6 @@
 
 ## 5. End-to-end verification
 
-- [ ] 5.1 Run a local/emulated end-to-end scenario where a worker leases synthetic work, stores a temporary outbox record, submits the same result batch twice, and the control plane retains one logical ingestion.
+- [x] 5.1 Run a local/emulated end-to-end scenario where a worker leases synthetic work, stores a temporary outbox record, submits the same result batch twice, and the control plane retains one logical ingestion.
 - [x] 5.2 Verify the read/query REST endpoint works independently of MCP and the MCP adapter returns semantics from the same application service.
-- [ ] 5.3 Run Maven tests, OpenSpec strict validation, relevant Graphify/Serena impact review, and update WORKLOG/MEMORY/iteration report before external review.
+- [x] 5.3 Run Maven tests, OpenSpec strict validation, relevant Graphify/Serena impact review, and update WORKLOG/MEMORY/iteration report before external review.

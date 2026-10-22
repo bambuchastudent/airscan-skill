@@ -86,3 +86,41 @@ The hosted query interfaces SHALL expose enough snapshot/source freshness inform
 
 - **WHEN** a query returns data backed by an old successful snapshot
 - **THEN** the result exposes the relevant observation/snapshot freshness instead of presenting the data as newly checked
+
+### Requirement: Local synthetic worker protocol POC
+
+The local control plane SHALL expose versioned authenticated synthetic
+lease, heartbeat, result submission and classified failure REST endpoints.
+Only a verified server-recognized `workerId` SHALL own a lease.
+The local POC SHALL reject missing/invalid bearer credentials and
+wrong-principal heartbeat or result attempts, without allowing workers
+to mutate Firestore directly.
+
+#### Scenario: Concurrent lease attempts
+
+- **WHEN** two authenticated workers attempt to lease one eligible synthetic job concurrently
+- **THEN** at most one unexpired lease exists for that job, and work becomes eligible again after its lease expires
+
+#### Scenario: Worker reports classified failure
+
+- **WHEN** the authenticated lease owner submits a source/transport or worker/internal failure
+- **THEN** the central job returns to an eligible synthetic state without publishing a successful result or negative route evidence
+
+### Requirement: Authoritative local retry convergence
+
+The control plane SHALL persist accepted result identity independently of
+the worker SQLite outbox, SHALL perform the final acceptance
+under Firestore transaction semantics, and SHALL preserve the same
+accepted result for a retry carrying identical job, lease, batch,
+worker and normalized payload identity. A different payload or
+principal SHALL NOT reuse that accepted identity.
+
+#### Scenario: Lost acknowledgment and restart
+
+- **WHEN** the server commits an accepted synthetic result but the worker loses the response and reopens the same SQLite outbox
+- **THEN** resubmitting the same pending `batchId` returns the original accepted receipt, the central store contains one logical ingestion, and the worker can mark the outbox item ACCEPTED
+
+#### Scenario: Simultaneous identical submissions
+
+- **WHEN** two submissions with identical authenticated job/lease/batch/content identity race
+- **THEN** the control plane converges on one authoritative acceptance and immutable archive reference
