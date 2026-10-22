@@ -4,7 +4,7 @@ This file is the curated durable memory for agents working on this repository. K
 
 ## Current state
 
-- Bootstrap is complete and merged. `add-distributed-control-plane` Iteration 1 was accepted by external review and PR #3 merged as `4e82c92b8c6cd1f4716207c4ac18c4ef189c404e`. Iteration 2 persistence remains in draft PR #4; external review found one archive crash-atomicity MAJOR, remediated at code SHA `c4f25ff57e7425febb725b5c04385c9c1476f812` (CI `39148837864`: 9/9 PASS). Final independent re-review is pending. No Iteration 3.
+- Bootstrap is complete and merged. `add-distributed-control-plane` Iteration 1 was accepted by external review and PR #3 merged as `4e82c92b8c6cd1f4716207c4ac18c4ef189c404e`. Iteration 2 passed final external review and PR #4 was merged as `7b693d97d15c0f8642ca2c08ce6ece36bfaa4d18`. Local authenticated distributed-control-plane POC is implemented in **draft PR #5**, verified implementation/spec SHA `7c3432846bee57b1cb29277519001c03f95475e5` with CI `39873870605` **9/9 PASS**; final closeout CI and external POC review remain pending. No cloud deployment or route topology.
 - Default branch: `develop`.
 - Production implementation language: Java, not Python.
 - Verified runtime baseline: Java 25 Temurin 25.0.4.1, Maven Wrapper 3.9.11, Quarkus 3.40.1.
@@ -144,3 +144,14 @@ Earlier CI failures, unverified tool statuses, Serena CLI incompatibility and mu
 - Archive reference metadata from future external clients is **not authority** and must be validated server-side against authoritative records.
 - Java 25 SQLite native-access warning is a nonblocking runtime/upgrade monitoring item; no speculative JVM flags.
 - PR #4 cannot merge and Iteration 3 cannot start before final independent external review PASS.
+
+## Local distributed-control-plane synthetic POC (2026-10-23)
+
+- Exact base `develop` merge SHA `7b693d97d15c0f8642ca2c08ce6ece36bfaa4d18`; PR #5 remains draft/unmerged until external review.
+- Java 25 Quarkus `WorkerProtocolResource` provides versioned `POST /api/v1/worker/leases`, `/leases/{jobId}/heartbeat`, `/results`, `/failures` and narrow `GET /api/v1/synthetic/accepted/{jobId}`. Synthetic jobs are server-seeded only in harness.
+- `WorkerIdentityVerifier` → typed `WorkerPrincipal`. Local scoped bearer token is loaded from an ephemeral file; no auth-off fallback; 401 for invalid/missing tokens and 403 for wrong-principal active lease. OIDC is deferred; public synthetic read endpoint is local/emulator-only, not an internet-safe production API.
+- `FirestoreWorkerProtocolStore` uses single-document Firestore transactions for lease exclusivity, expiry recovery, heartbeat, classified failure and accepted receipt. The authoritative acceptance enforces worker+job+lease+batch+content hash; committed identical replay returns the **same receipt even after lease expiry**. Immutable `ObservationArchive` gzip reference is retained centrally; no duplicate logical ingestion. Archive publication can precede central commit, so crash may leave safe orphan content-addressed object. No GCS production adapter.
+- Independent worker `WorkerPocClient` uses Java `HttpClient` with HTTPS or localhost HTTP only and `SqliteOutbox` PENDING→ACCEPTED. Root Maven compiles worker sources as **test-only** for emulator IT; production root/worker artifacts remain separate, worker has no Firestore/GCS/Firebase SDK.
+- `WorkerPocIT` uses real Quarkus HTTP, Firestore Emulator, local gzip archive and SQLite reopen to simulate response loss/retry. CI `39873870605`: 11 root tests, 2 worker tests, **5 emulator IT** (4 POC + 1 central store), 9/9 jobs PASS, 0 failures/errors/skips. Graphify 0.9.92 and pinned Serena POC assertions also PASS; OpenSpec 3.1–3.3 and 5.1, 5.2, 5.3 marked verified. Deployment tasks 4.x remain open.
+- Formal decision: synthetic one-job lease transactional implementation tests INV-SCAN-001/002 **narrowly**, but existing Alloy/TLC/Dafny are unchanged bootstrap gates and NOT a proof of new lease protocol. Defer full scheduler/retention TLA+ model to `add-durable-scan-retention`; concurrency emulator tests are the local POC gate.
+- Full invocation and evidence in `docs/LOCAL_POC.md` and `docs/agent/iterations/2026-10-22T2350Z-add-distributed-control-plane-poc.md`. Do not merge PR #5 or begin cloud deployment/topology without independent external POC PASS.
