@@ -198,3 +198,91 @@ authorization decisions remain solely in the control plane.
 No worker lease, heartbeat, result ingestion, Firestore repository, SQLite outbox,
 Cloud Storage archive, Cloud Run deployment, Hosting, scheduling or travel-domain
 API is part of this iteration. No formal concurrency/state invariant is introduced.
+
+## Iteration 2 persistence decisions (2026-10-18)
+
+- The existing root Quarkus artifact owns `CentralOperationalStore` (application port),
+  `CentralRecordService` (server-generated UUID identity), and the Firestore adapter.
+  A tiny synthetic control record containing a bounded label proves create/read
+  without exposing any unauthenticated mutating REST or MCP endpoint.
+  The adapter accepts an explicitly supplied Firestore client. Production
+  credential/client wiring is intentionally deferred: Iteration 2 never performs
+  implicit ADC discovery at Quarkus startup.
+- Firestore emulator integration is opt-in via mandatory CI job and Maven
+  `-Pfirestore-emulator verify`. It exercises real Java SDK operations, creates
+  and reads a synthetic record, disposes the client, creates a new client,
+  and reads the same emulator-resident record without Google credentials.
+  Default Maven unit tests use only a fake port. No emulator skip-if-absent:
+  emulator test fails if environment variables or service are missing.
+  Emulator data is memory-only and the suite does not test production indexes
+  or transaction concurrency semantics.
+- Worker-only `SqliteOutbox`: schema version via `PRAGMA user_version=1`,
+  `batch_id` primary key, sanitized `payload`, `created_at` ISO timestamp,
+  `state` PENDING/ACCEPTED. `INSERT OR IGNORE` is followed by deterministic
+  payload/timestamp collision verification; the batch retry identity persists
+  over close/reopen. WAL, 5000ms busy timeout and synchronous FULL are local
+  durability choices. No worker HTTP, job/lease identity, or central authority.
+- `ObservationArchive` is a pure application port. A deterministic local
+  `LocalGzipObservationArchive` test adapter writes a tiny sanitized synthetic
+  batch to a SHA-256 content-addressed gzip path, with source and batch
+  identities also hashed into path components. CREATE_NEW forbids overwrites;
+  if an object already exists, decompression must match the requested bytes.
+  Its `ArchiveReference` retains source, batch, hash, object path, compression
+  and byte sizes. This is not a GCS client implementation; an authenticated
+  immutable Cloud Storage adapter is a later, separately verified concern.
+- No direct worker Firestore or Cloud Storage SDK dependency. A CI dependency
+  tree assertion enforces this. No lease/heartbeat/ingestion/auth/API addition.
+  Existing formal bootstrap invariants are untouched because no distributed
+  state machine or publication behavior is implemented.
+
+## Iteration 2 final archive-publication remediation (2026-10-18)
+
+Independent review of PR #4 at `d1bdaee60137d1fc367c1e573c845d92fc396711`
+accepted the persistence boundaries but identified **MAJOR** crash-atomicity risk
+in writing gzip bytes directly to the final immutable object path.
+
+The local archive now stages each complete gzip in a unique
+`Files.createTempFile` file in the destination's directory, writes through a
+`FileChannel`, and calls `force(true)` before publication. It uses
+`Files.createLink(destination, staging)` to publish the completed file as a
+single atomic, no-overwrite directory entry; `FileAlreadyExistsException`
+means another writer owns the final key. Verify that existing gzip decompresses
+to the exact expected payload; corrupted or conflicting content fails closed.
+`finally` deletes staging on success and Java-observable failure.
+
+**Why hard link rather than `Files.move(..., ATOMIC_MOVE)`:** Java's NIO
+contract explicitly permits `ATOMIC_MOVE` to overwrite an existing target,
+even without `REPLACE_EXISTING`, on some file systems. That cannot satisfy
+immutable create-only semantics under concurrent writers. Atomic hard-link
+creation fails when the destination exists, preventing such replacement.
+This optional file-system operation must be supported; when unavailable, fail
+closed instead of a non-atomic copy or potentially destructive move.
+This is local-only and does not change the planned GCS adapter semantics.
+
+A failure before publication leaves only staging (which cleanup handles where
+possible); a crash after link publication exposes only fully written,
+file-channel-synced gzip data. A sudden process kill can leave an orphan
+staging file, but it never becomes an authoritative final archive object.
+Directory-entry persistence across power loss is not guaranteed merely by
+`force(true)` on the file; losing the final link is preferable to exposing a
+partial gzip. Filesystems without hard-link support are unsupported for this
+local adapter until a separately verified safe create-only primitive exists.
+
+SQLite's `PENDING -> ACCEPTED` model and deterministic
+`ORDER BY created_at, batch_id` remain unchanged: there is no `IN_FLIGHT`
+state or FIFO sequence. A future lost HTTP response must remain safe through
+**control-plane idempotency** in Iteration 3; an `IN_FLIGHT` state can itself
+strand work and is not justified here.
+
+Future external-facing `ArchiveReference` fields (`sourceId`, `batchId`,
+`objectKey`, `sha256`) must be validated against authoritative metadata;
+they are not self-authenticating. SQLite JDBC's Java 25 native-access warning
+is nonblocking; monitor JDK enforcement and validate flags or dependency
+upgrades only when supported by reproducible evidence.
+
+**Verification:** implementation SHA
+`c4f25ff57e7425febb725b5c04385c9c1476f812`,
+CI [39148837864](https://github.com/bambuchastudent/airscan-skill/actions/runs/39148837864)
+**9/9 PASS**, including 3 archive tests, 11 root tests, 2 worker tests,
+1 Firestore emulator integration test, Graphify/Serena and existing formal gates.
+No worker protocol, central storage, authentication or deployment behavior changed.

@@ -53,12 +53,27 @@ async def main():
                 "relative_path":"src/main/java/dev/airscan/application/CapabilitiesService.java"})
             assert "CapabilitiesResource" in application_refs,application_refs
             assert "McpCapabilitiesAdapter" in application_refs,application_refs
+            persistence_symbols={}
+            for name in ("CentralOperationalStore","CentralRecordService",
+                         "FirestoreCentralOperationalStore","ObservationArchive"):
+                result=await invoke("find_symbol",{
+                    "name_path_pattern":name,"relative_path":"src",
+                    "include_body":False,"substring_matching":True})
+                assert name in result,result
+                persistence_symbols[name]=result
+            persistence_references=await invoke("find_referencing_symbols",{
+                "name_path":"CentralRecordService/createSynthetic",
+                "relative_path":"src/main/java/dev/airscan/application/CentralRecordService.java"})
+            assert "CentralRecordServiceTest" in persistence_references,persistence_references
+            assert "FirestoreCentralOperationalStoreIT" in persistence_references,persistence_references
             Path("serena-evidence/semantic.json").write_text(json.dumps({
                 "tools":sorted(required),"resource":symbols,
                 "marker_status":marker,"references":references,
                 "application_service":application_symbol,
-                "application_references":application_refs},indent=2))
-            print("Serena Java semantic lookup and references PASS; capability REST/MCP shared-service references PASS")
+                "application_references":application_refs,
+                "persistence_symbols":persistence_symbols,
+                "persistence_references":persistence_references},indent=2))
+            print("Serena Java semantic lookup PASS; Iteration 1 adapters and Iteration 2 persistence symbols/references PASS")
 asyncio.run(main())
 """.trimIndent()
 val tmp=Files.createTempFile("airscan-serena-", ".py")

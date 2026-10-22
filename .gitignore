@@ -2,6 +2,12 @@ target/
 **/target/
 *.db
 *.db-*
+*.sqlite-*
+*.sqlite3-*
+*-wal
+*-shm
+**/application_default_credentials.json
+**/adc.json
 *.sqlite
 *.sqlite3
 .env

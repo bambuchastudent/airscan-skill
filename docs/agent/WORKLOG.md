@@ -257,3 +257,74 @@ not a claim that this documentation closeout commit has already passed CI.
 
 **Next:** review narrow Iteration 1 PR independently. Do not merge/mark
 change complete/archive or begin Iteration 2 before that review.
+
+## 2026-10-18T15:52Z — distributed-control-plane Iteration 2 persistence
+
+**Actor:** ChatGPT implementation orchestrator; independent external review not yet performed.
+**Change/tasks:** `add-distributed-control-plane` 2.1–2.3; 5.3 iteration evidence partial.
+**Precondition:** user-attested independent Iteration 1 PASS; PR #3 was found unmerged, made ready and merged at `4e82c92b8c6cd1f4716207c4ac18c4ef189c404e`. Base `develop` verified at that SHA; dedicated branch `feat/add-distributed-control-plane-iteration-2` and draft PR #4.
+**Verified code SHA:** `59012715f26c0957366b6d6b22f108632f480a84`.
+**Verified CI:** [39142302544](https://github.com/bambuchastudent/airscan-skill/actions/runs/39142302544) — **9/9 PASS**.
+
+**Changed at code SHA:** `CentralOperationalStore` port + `CentralRecordService` UUID synthetic record identity, Firestore SDK adapter and **mandatory emulator integration test**. Worker-only SQLite schema v1/WAL/FULL sync/5000ms busy timeout outbox, stable batch id and restart/retry/acceptance JUnit test. `ObservationArchive` port, SHA-256 and gzip content-addressed local immutable archive test adapter with source/batch/key/size/compression provenance. `pom.xml`, `worker/pom.xml`, `.gitignore` and `.github/workflows/bootstrap-runner.yml` updated. No worker HTTP/identity verifier, route/fare, cloud deployment or GCS production adapter.
+
+**Exact observed commands/checks at verified code SHA `59012715...`:**
+
+- `./mvnw -B -ntp spotless:check` — **PASS**.
+- `./mvnw -B -ntp checkstyle:check` — **PASS**.
+- `./mvnw -B -ntp clean verify` — **PASS**, 9 root JUnit tests, 0 failed/error/skipped; includes real REST/OpenAPI, MCP parity, central in-memory fake and archive immutability tests.
+- `./mvnw -B -ntp -f worker/pom.xml clean verify` — **PASS**, 2 worker JUnit tests, 0 failed/error/skipped; close/reopen and accepted-state durability exercised.
+- `./mvnw -B -ntp -f worker/pom.xml dependency:tree -DoutputFile=worker-dependencies.txt` plus grep for `google-cloud-firestore|google-cloud-storage|firebase-admin` — **PASS**, none present. Worker executable smoke PASS.
+- `gcloud emulators firestore start --database-mode=firestore-native --host-port=127.0.0.1:8085` — **PASS**, actual process reached socket readiness in separate CI job; Cloud SDK pinned `550.0.0` with `cloud-firestore-emulator` component. `FIRESTORE_EMULATOR_HOST=127.0.0.1:8085`, synthetic `AIRSCAN_TEST_PROJECT_ID=airscan-emulator-it`; no Google credentials.
+- `./mvnw -B -ntp -Pfirestore-emulator verify` — **PASS**, 9 root unit tests + exactly 1 **mandatory** Failsafe `FirestoreCentralOperationalStoreIT`, 0 failures/errors/skips. Real emulator write/read, close, new client/read PASSED. Failsafe report existence and no-skips asserted in CI.
+- `openspec validate --archived --strict` — **PASS**; `openspec validate --changes --strict` — **PASS**.
+- `kotlin scripts/graphify-shared-cache.main.kts --root . --cache-dir /tmp/airscan-shared-graph --output graphify-evidence` — **PASS** (Graphify `0.9.92`); baseline extracted REST/MCP shared-service calls. Explicit persistence symbol/edge checks added in documentation closeout; their execution requires final CI.
+- `kotlin scripts/serena-semantic-smoke.main.kts` — **PASS**, immutable Serena `d9e4c796fae0207ba6848d1df4b331122a5567b5`; baseline semantic symbols/references. Explicit persistence reference checks added in closeout; verify on final CI.
+- Java symbol smoke, existing Alloy 6.2.0, TLC 1.8.0, Dafny 4.11.0 gates — **PASS**; no new lease/snapshot model was introduced.
+- Tracked secret/runtime file check (`git ls-files | grep -Ei ...`) — **PASS**.
+
+**Failures/remediation (must not report as passes):**
+- `8002bc39...` / CI [39141914181](https://github.com/bambuchastudent/airscan-skill/actions/runs/39141914181): Spotless **FAILED** (3 formatting findings) and superseded run cancelled.
+- `5d98778d...` / CI [39141997607](https://github.com/bambuchastudent/airscan-skill/actions/runs/39141997607): superseded/cancelled.
+- `a56514a5...` / CI [39142124509](https://github.com/bambuchastudent/airscan-skill/actions/runs/39142124509): main regression **PASS**, emulator **FAILED** because `FirestoreOptions.getService()` cached an already-closed client. Fixed by constructing fresh options before reopening.
+- `59012715...` / CI `39142302544` **9/9 PASS**, emulator integration test genuinely executed and passed.
+
+**Versions:** Java 25 Temurin, Maven Wrapper 3.9.11, Quarkus 3.40.1, Google Firestore Java client 3.49.0, SQLite JDBC 3.53.4.0, gcloud CLI 550.0.0, OpenSpec 1.14.0, Graphify 0.9.92 and pinned Serena, Alloy 6.2.0, TLC 1.8.0, Dafny 4.11.0.
+
+**Limits:** Firestore emulator is in-memory and does not prove production transaction/index behavior; local archive is *not* Cloud Storage GCS SDK adapter. Worker SQLite only stores synthetic batches: no HTTP, lease, heartbeat or central ingestion. No cloud credentials were used. Local assistant container Java 21 cannot run Java 25 Maven suite or fetch GitHub due unavailable DNS; all PASS evidence is from linked GitHub CI.
+
+**Current closeout:** this WORKLOG entry, durable MEMORY, marked OpenSpec 2.1–2.3 and iteration report are part of the documentation-only code review closeout; green CI for this **new** commit must be observed before independent review.
+**Next:** independent external review of Iteration 2 only; do not merge PR #4 or start Iteration 3 without reviewer PASS.
+
+## 2026-10-18T17:20Z — Iteration 2 archive atomic-publication MAJOR remediation
+
+**Actor:** implementation orchestrator. **Change:** `add-distributed-control-plane`, task 2.3 (already checked, reviewed correction), not worker protocol. **External review input:** PR #4 at `d1bdaee60137d1fc367c1e573c845d92fc396711` accepted all persistence boundaries except **MAJOR** incomplete final archive object on a process/host crash during direct `CREATE_NEW` write.
+
+**Implementation range:** `77501c7bb8d0e4b84046da34c59a6410f3efe682` (atomic staging), `8593ca7f6fd9a0efdd22990ee726ceb24576c5f6` (tests), `2551ac26030fd26ddef782075294013727881610` (imports), `c4f25ff57e7425febb725b5c04385c9c1476f812` (Spotless exact corrections).
+
+**Files:** `src/main/java/dev/airscan/adapter/archive/LocalGzipObservationArchive.java`, `src/test/java/dev/airscan/adapter/archive/LocalGzipObservationArchiveTest.java`; design, WORKLOG, MEMORY and the existing Iteration 2 report updated in separate evidence-closeout commit.
+
+**Publication:** unique same-directory `Files.createTempFile(..., ".tmp")`, complete gzip `FileChannel.write` loop + `force(true)`; atomic create-only `Files.createLink(destination, staging)` and unconditional best-effort-on-Java-execution staging cleanup via `finally`. Java documents that `Files.move(..., ATOMIC_MOVE)` can overwrite an existing destination depending on provider, so `createLink` is used instead: never replace; fail closed when hard linking unsupported. Existing destination is decompressed and byte-compared with expected source, corrupt/truncated file fails without overwrite; simultaneous writers of identical payload return identical reference. Power-loss directory durability is not claimed, but a visible final entry never represents an incomplete staged gzip. Unrecoverable abrupt kill may orphan staging only, never authoritative final object.
+
+**Test changes:** existing archive test additionally checks SHA-256 and no staging files; new corrupt-existing gzip test verifies throw, byte-for-byte no overwrite and cleanup on failed publication; new four-concurrent-writer test verifies same immutable reference, correct bytes and no staging files. Three archive tests total.
+
+**CI execution at implementation SHA `c4f25ff57e7425febb725b5c04385c9c1476f812`:**
+[39148837864](https://github.com/bambuchastudent/airscan-skill/actions/runs/39148837864)
+**9/9 PASS** (all jobs terminal).
+- `./mvnw -B -ntp spotless:check` — PASS.
+- `./mvnw -B -ntp checkstyle:check` — PASS.
+- `./mvnw -B -ntp clean verify` — PASS; 11 root tests, 3 archive-specific, 0 failures/errors/skips; real Iteration 1 REST/OpenAPI/MCP regression PASS.
+- `./mvnw -B -ntp -f worker/pom.xml clean verify` — PASS; 2 worker tests, worker process smoke PASS, no SQLite change.
+- `./mvnw -B -ntp -f worker/pom.xml dependency:tree -DoutputFile=worker-dependencies.txt` plus no Google Firestore/Storage/Firebase SDK grep — PASS.
+- `gcloud emulators firestore start --database-mode=firestore-native --host-port=127.0.0.1:8085` — PASS; gcloud SDK 550.0.0 / emulator 1.20.2.
+- `./mvnw -B -ntp -Pfirestore-emulator verify` — PASS, mandatory 1 emulator Failsafe IT and 11 root regression tests, 0 failures/errors/skips, no credentials.
+- `openspec validate --archived --strict` — PASS.
+- `openspec validate --changes --strict` — PASS.
+- `kotlin scripts/graphify-shared-cache.main.kts --root . --cache-dir /tmp/airscan-shared-graph --output graphify-evidence` — PASS, Graphify 0.9.92 persistence symbols/relationships preserved.
+- `kotlin scripts/serena-semantic-smoke.main.kts` — PASS, pinned Serena `d9e4c796fae0207ba6848d1df4b331122a5567b5`, persistence symbol/reference checks.
+- `python3 scripts/java-symbol-smoke.py --root . --output java-symbol-evidence`, existing Alloy 6.2.0, TLC 1.8.0 and Dafny 4.11.0 gates — PASS, no new state-machine invariant.
+- Tracked-secret/runtime-artifact scan — PASS.
+
+**Failed/superseded evidence:** PR-branch CI `39148684334` (`77501c7b...`) and `39148736465` (`8593ca7f...`) cancelled by newer pushes; `39148762379` (`2551ac26...`) failed Java Spotless (2 formatting findings; remaining jobs superseded/cancelled). `c4f25ff5...` fixed the exact findings and passed CI `39148837864`. Do not conflate cancelled with PASS.
+
+**Explicit nonchanges/followups:** No `IN_FLIGHT` outbox state, strict FIFO queue ID, worker HTTP ingestion, auth, Firestore schema or deployment. SQLite Java 25 native-access warning remains nonblocking; monitor instead of changing JVM flags. Future externally supplied archive metadata is untrusted and must be corroborated against authoritative control-plane records. Final documentation-only closeout requires new CI; no external final PASS/merge/Iteration 3 claimed.

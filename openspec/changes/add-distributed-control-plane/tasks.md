@@ -8,9 +8,9 @@
 
 ## 2. Central and worker persistence
 
-- [ ] 2.1 Implement a Firestore-backed central store boundary using the emulator for deterministic tests; verify no worker component requires direct Firestore mutation credentials.
-- [ ] 2.2 Implement worker-local SQLite cache/spool/outbox with crash-safe retry identity and verify restart/retry tests.
-- [ ] 2.3 Implement Cloud Storage archive abstraction for compressed immutable batches with local/fake deterministic tests; verify archive metadata retains scan/source/content-hash provenance.
+- [x] 2.1 Implement a Firestore-backed central store boundary using the emulator for deterministic tests; verify no worker component requires direct Firestore mutation credentials.
+- [x] 2.2 Implement worker-local SQLite cache/spool/outbox with crash-safe retry identity and verify restart/retry tests.
+- [x] 2.3 Implement Cloud Storage archive abstraction for compressed immutable batches with local/fake deterministic tests; verify archive metadata retains scan/source/content-hash provenance.
 
 ## 3. Worker protocol
 
