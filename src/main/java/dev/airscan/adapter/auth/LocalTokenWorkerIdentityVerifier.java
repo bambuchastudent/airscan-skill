@@ -5,7 +5,6 @@ import dev.airscan.application.worker.WorkerPrincipal;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Map;
-import java.util.Objects;
 
 /** Local POC only; tokens are injected at runtime and never logged. */
 public final class LocalTokenWorkerIdentityVerifier implements WorkerIdentityVerifier {
@@ -28,8 +27,7 @@ public final class LocalTokenWorkerIdentityVerifier implements WorkerIdentityVer
     }
     byte[] supplied = authorization.substring(7).getBytes(StandardCharsets.UTF_8);
     for (var worker : tokens.entrySet()) {
-      if (MessageDigest.isEqual(
-          supplied, worker.getValue().getBytes(StandardCharsets.UTF_8))) {
+      if (MessageDigest.isEqual(supplied, worker.getValue().getBytes(StandardCharsets.UTF_8))) {
         return new WorkerPrincipal(worker.getKey());
       }
     }

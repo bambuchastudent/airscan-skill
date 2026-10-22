@@ -30,13 +30,22 @@ public final class FirestoreWorkerProtocolStore implements WorkerProtocolStore {
 
   @Override
   public void seed(String jobId, String label, Instant now) {
-    await(document(jobId).create(Map.of(
-        "jobId", jobId, "label", label, "createdAt", now.toString(), "state", "READY")));
+    await(
+        document(jobId)
+            .create(
+                Map.of(
+                    "jobId",
+                    jobId,
+                    "label",
+                    label,
+                    "createdAt",
+                    now.toString(),
+                    "state",
+                    "READY")));
   }
 
   @Override
-  public Optional<Lease> acquire(
-      String jobId, String workerId, Instant now, Duration lifetime) {
+  public Optional<Lease> acquire(String jobId, String workerId, Instant now, Duration lifetime) {
     return atomic(
         tx -> {
           DocumentReference ref = document(jobId);
@@ -48,10 +57,19 @@ public final class FirestoreWorkerProtocolStore implements WorkerProtocolStore {
               && Instant.parse(record.getString("expiresAt")).isAfter(now)) {
             return Optional.<Lease>empty();
           }
-          Lease lease = new Lease(jobId, UUID.randomUUID().toString(), workerId, now.plus(lifetime));
-          tx.update(ref, Map.of(
-              "state", "LEASED", "leaseId", lease.leaseId(),
-              "workerId", workerId, "expiresAt", lease.expiresAt().toString()));
+          Lease lease =
+              new Lease(jobId, UUID.randomUUID().toString(), workerId, now.plus(lifetime));
+          tx.update(
+              ref,
+              Map.of(
+                  "state",
+                  "LEASED",
+                  "leaseId",
+                  lease.leaseId(),
+                  "workerId",
+                  workerId,
+                  "expiresAt",
+                  lease.expiresAt().toString()));
           return Optional.of(lease);
         });
   }
@@ -77,8 +95,13 @@ public final class FirestoreWorkerProtocolStore implements WorkerProtocolStore {
 
   @Override
   public Accepted accept(
-      String jobId, String leaseId, String batchId, String workerId,
-      String hash, ArchiveReference archive, Instant now) {
+      String jobId,
+      String leaseId,
+      String batchId,
+      String workerId,
+      String hash,
+      ArchiveReference archive,
+      Instant now) {
     return atomic(
         tx -> {
           DocumentReference ref = document(jobId);
@@ -119,9 +142,15 @@ public final class FirestoreWorkerProtocolStore implements WorkerProtocolStore {
           DocumentReference ref = document(jobId);
           DocumentSnapshot record = tx.get(ref).get();
           requireLease(record, leaseId, workerId, now);
-          tx.update(ref, Map.of(
-              "state", "READY", "lastFailureClass", classification,
-              "lastFailureAt", now.toString()));
+          tx.update(
+              ref,
+              Map.of(
+                  "state",
+                  "READY",
+                  "lastFailureClass",
+                  classification,
+                  "lastFailureAt",
+                  now.toString()));
           return true;
         });
   }
@@ -135,23 +164,29 @@ public final class FirestoreWorkerProtocolStore implements WorkerProtocolStore {
   }
 
   private static Accepted acceptedRecord(DocumentSnapshot record) {
-    ArchiveReference archive = new ArchiveReference(
-        record.getString("archiveSourceId"),
-        record.getString("archiveBatchId"),
-        record.getString("archiveSha"),
-        record.getString("archiveKey"),
-        record.getString("archiveCompression"),
-        record.getLong("archiveOriginalBytes"),
-        record.getLong("archiveCompressedBytes"));
+    ArchiveReference archive =
+        new ArchiveReference(
+            record.getString("archiveSourceId"),
+            record.getString("archiveBatchId"),
+            record.getString("archiveSha"),
+            record.getString("archiveKey"),
+            record.getString("archiveCompression"),
+            record.getLong("archiveOriginalBytes"),
+            record.getLong("archiveCompressedBytes"));
     return new Accepted(
-        record.getId(), record.getString("leaseId"), record.getString("batchId"),
-        record.getString("workerId"), record.getString("hash"),
-        Instant.parse(record.getString("acceptedAt")), archive);
+        record.getId(),
+        record.getString("leaseId"),
+        record.getString("batchId"),
+        record.getString("workerId"),
+        record.getString("hash"),
+        Instant.parse(record.getString("acceptedAt")),
+        archive);
   }
 
   private static void requireLease(
       DocumentSnapshot record, String leaseId, String workerId, Instant now) {
-    if (!record.exists() || !"LEASED".equals(record.getString("state"))
+    if (!record.exists()
+        || !"LEASED".equals(record.getString("state"))
         || !Objects.equals(leaseId, record.getString("leaseId"))
         || !Instant.parse(record.getString("expiresAt")).isAfter(now)) {
       throw new IllegalStateException("Lease not active");

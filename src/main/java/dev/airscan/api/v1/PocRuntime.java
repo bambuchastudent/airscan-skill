@@ -10,9 +10,9 @@ import dev.airscan.application.worker.WorkerProtocolService;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.WebApplicationException;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.io.IOException;
 import java.time.Clock;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,9 +31,14 @@ public class PocRuntime {
       String project = System.getenv("AIRSCAN_TEST_PROJECT_ID");
       String archive = System.getenv("AIRSCAN_POC_ARCHIVE_DIR");
       String credentialsFile = System.getenv("AIRSCAN_POC_WORKERS_FILE");
-      if (host == null || host.isBlank() || project == null || project.isBlank()
-          || archive == null || archive.isBlank()
-          || credentialsFile == null || credentialsFile.isBlank()) {
+      if (host == null
+          || host.isBlank()
+          || project == null
+          || project.isBlank()
+          || archive == null
+          || archive.isBlank()
+          || credentialsFile == null
+          || credentialsFile.isBlank()) {
         throw new WebApplicationException("Local POC environment not configured", 503);
       }
       String workers;
@@ -45,19 +50,24 @@ public class PocRuntime {
       Map<String, String> secrets = new HashMap<>();
       for (String entry : workers.split(";")) {
         String[] pair = entry.split("=", 2);
-        if (pair.length != 2 || pair[0].isBlank() || pair[1].isBlank()
+        if (pair.length != 2
+            || pair[0].isBlank()
+            || pair[1].isBlank()
             || secrets.putIfAbsent(pair[0], pair[1]) != null) {
           throw new WebApplicationException("Invalid POC worker configuration", 503);
         }
       }
       verifier = new LocalTokenWorkerIdentityVerifier(secrets);
       firestore =
-          FirestoreOptions.newBuilder().setProjectId(project).setEmulatorHost(host).build()
+          FirestoreOptions.newBuilder()
+              .setProjectId(project)
+              .setEmulatorHost(host)
+              .build()
               .getService();
       store = new FirestoreWorkerProtocolStore(firestore);
       service =
-          new WorkerProtocolService(store, new LocalGzipObservationArchive(Path.of(archive)),
-              Clock.systemUTC());
+          new WorkerProtocolService(
+              store, new LocalGzipObservationArchive(Path.of(archive)), Clock.systemUTC());
     }
     return service;
   }

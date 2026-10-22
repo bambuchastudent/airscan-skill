@@ -2,12 +2,10 @@ package dev.airscan.application.worker;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.airscan.application.port.ObservationArchive;
-import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Clock;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.HexFormat;
 import java.util.Objects;
 import java.util.Optional;
@@ -43,10 +41,8 @@ public final class WorkerProtocolService {
         .orElseThrow(() -> new IllegalStateException("Job unavailable for lease"));
   }
 
-  public WorkerProtocolStore.Lease heartbeat(
-      WorkerPrincipal worker, String jobId, String leaseId) {
-    return store.heartbeat(
-        jobId, leaseId, worker.workerId(), clock.instant(), LEASE_LIFETIME);
+  public WorkerProtocolStore.Lease heartbeat(WorkerPrincipal worker, String jobId, String leaseId) {
+    return store.heartbeat(jobId, leaseId, worker.workerId(), clock.instant(), LEASE_LIFETIME);
   }
 
   public WorkerProtocolStore.Accepted submit(
@@ -81,10 +77,8 @@ public final class WorkerProtocolService {
         jobId, leaseId, batchId, worker.workerId(), hash, reference, clock.instant());
   }
 
-  public void fail(
-      WorkerPrincipal worker, String jobId, String leaseId, String classification) {
-    if (!"SOURCE_TRANSPORT".equals(classification)
-        && !"WORKER_INTERNAL".equals(classification)) {
+  public void fail(WorkerPrincipal worker, String jobId, String leaseId, String classification) {
+    if (!"SOURCE_TRANSPORT".equals(classification) && !"WORKER_INTERNAL".equals(classification)) {
       throw new IllegalArgumentException("Unknown failure classification");
     }
     store.fail(jobId, leaseId, worker.workerId(), classification, clock.instant());

@@ -4,9 +4,7 @@ import dev.airscan.application.worker.WorkerPrincipal;
 import dev.airscan.application.worker.WorkerProtocolStore;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.GET;
 import jakarta.ws.rs.HeaderParam;
-import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -22,10 +20,14 @@ import java.util.function.Supplier;
 @Produces(MediaType.APPLICATION_JSON)
 public class WorkerProtocolResource {
   public record LeaseRequest(String jobId) {}
+
   public record HeartbeatRequest(String leaseId) {}
+
   public record ResultRequest(
       String jobId, String leaseId, String batchId, String normalizedPayload) {}
+
   public record FailureRequest(String jobId, String leaseId, String classification) {}
+
   public record FailureReceipt(String status) {}
 
   @Inject PocRuntime runtime;
@@ -54,9 +56,15 @@ public class WorkerProtocolResource {
       @HeaderParam("Authorization") String authorization, ResultRequest body) {
     WorkerPrincipal principal = authenticate(authorization);
     return respond(
-        () -> runtime.service().submit(
-            principal, body.jobId(), body.leaseId(), body.batchId(),
-            body.normalizedPayload()));
+        () ->
+            runtime
+                .service()
+                .submit(
+                    principal,
+                    body.jobId(),
+                    body.leaseId(),
+                    body.batchId(),
+                    body.normalizedPayload()));
   }
 
   @POST
@@ -66,8 +74,7 @@ public class WorkerProtocolResource {
     WorkerPrincipal principal = authenticate(authorization);
     return respond(
         () -> {
-          runtime.service().fail(
-              principal, body.jobId(), body.leaseId(), body.classification());
+          runtime.service().fail(principal, body.jobId(), body.leaseId(), body.classification());
           return new FailureReceipt("RECOVERABLE");
         });
   }
