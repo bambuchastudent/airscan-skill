@@ -103,7 +103,7 @@ jobs:
           tests = sum(int(r.attrib.get('tests', 0)) for r in results)
           bad = sum(int(r.attrib.get(k, 0)) for r in results for k in ('failures', 'errors', 'skipped'))
           print(f'Worker tests={tests}, failed/errors/skipped={bad}')
-          assert tests >= 1 and bad == 0
+          assert tests >= 5 and bad == 0, 'All emulator and local POC scenarios must execute'
           PY
       - name: Execute worker entrypoint
         shell: bash
@@ -408,6 +408,12 @@ jobs:
           done
           cat /tmp/airscan-firestore-emulator.log
           exit 1
+      - name: Generate ephemeral POC worker tokens and archive directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "AIRSCAN_POC_WORKERS=worker-a=$(openssl rand -hex 24);worker-b=$(openssl rand -hex 24)" >> "$GITHUB_ENV"
+          echo "AIRSCAN_POC_ARCHIVE_DIR=$(mktemp -d)" >> "$GITHUB_ENV"
       - name: Emulator integration test is mandatory
         shell: bash
         run: |
