@@ -50,30 +50,6 @@ jobs:
           test -s formal/INVARIANTS.md
           test -s openspec/config.yaml
           test -s openspec/changes/archive/2026-10-18-bootstrap-agentic-foundation/tasks.md
-      - name: Temporary POC Java format capture (remove before review)
-        shell: bash
-        run: |
-          set -euo pipefail
-          ./mvnw -B -ntp spotless:apply
-          python3 - <<'PY'
-          import base64
-          from pathlib import Path
-          files = [
-            'src/main/java/dev/airscan/application/worker/WorkerPrincipal.java',
-            'src/main/java/dev/airscan/application/worker/WorkerIdentityVerifier.java',
-            'src/main/java/dev/airscan/application/worker/WorkerProtocolStore.java',
-            'src/main/java/dev/airscan/application/worker/WorkerProtocolService.java',
-            'src/main/java/dev/airscan/adapter/auth/LocalTokenWorkerIdentityVerifier.java',
-            'src/main/java/dev/airscan/adapter/firestore/FirestoreWorkerProtocolStore.java',
-            'src/main/java/dev/airscan/api/v1/PocRuntime.java',
-            'src/main/java/dev/airscan/api/v1/WorkerProtocolResource.java',
-            'src/main/java/dev/airscan/api/v1/SyntheticAcceptedResource.java',
-            'src/test/java/dev/airscan/api/v1/WorkerPocIT.java'
-          ]
-          for name in files:
-            encoded = base64.b64encode(Path(name).read_bytes()).decode()
-            print('FORMATTED_POC|' + name + '|' + encoded + '|END_FORMATTED_POC', flush=True)
-          PY
       - name: Deterministic Java formatting check
         run: ./mvnw -B -ntp spotless:check
       - name: Java static analysis (Checkstyle)
@@ -127,7 +103,7 @@ jobs:
           tests = sum(int(r.attrib.get('tests', 0)) for r in results)
           bad = sum(int(r.attrib.get(k, 0)) for r in results for k in ('failures', 'errors', 'skipped'))
           print(f'Worker tests={tests}, failed/errors/skipped={bad}')
-          assert tests >= 5 and bad == 0, 'All emulator and local POC scenarios must execute'
+          assert tests >= 1 and bad == 0, 'Worker tests missing or skipped'
           PY
       - name: Execute worker entrypoint
         shell: bash
@@ -453,7 +429,7 @@ jobs:
           tests=sum(int(ET.parse(p).getroot().attrib.get('tests',0)) for p in paths)
           bad=sum(int(ET.parse(p).getroot().attrib.get(k,0)) for p in paths for k in ('failures','errors','skipped'))
           print(f'Firestore emulator integration tests={tests}, failures/errors/skipped={bad}')
-          assert tests >= 1 and bad == 0
+          assert tests >= 5 and bad == 0, 'Mandatory Firestore and four POC scenarios missing'
           PY
       - name: Emulator logs on failure
         if: failure()
