@@ -436,7 +436,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo "AIRSCAN_POC_WORKERS=worker-a=$(openssl rand -hex 24);worker-b=$(openssl rand -hex 24)" >> "$GITHUB_ENV"
+          umask 077
+          fixture=$(mktemp)
+          printf 'worker-a=%s;worker-b=%s' "$(openssl rand -hex 24)" "$(openssl rand -hex 24)" > "$fixture"
+          echo "AIRSCAN_POC_WORKERS_FILE=$fixture" >> "$GITHUB_ENV"
           echo "AIRSCAN_POC_ARCHIVE_DIR=$(mktemp -d)" >> "$GITHUB_ENV"
       - name: Emulator integration test is mandatory
         shell: bash

@@ -10,7 +10,9 @@ import dev.airscan.application.worker.WorkerProtocolService;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.WebApplicationException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.io.IOException;
 import java.time.Clock;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,10 +30,17 @@ public class PocRuntime {
       String host = System.getenv("FIRESTORE_EMULATOR_HOST");
       String project = System.getenv("AIRSCAN_TEST_PROJECT_ID");
       String archive = System.getenv("AIRSCAN_POC_ARCHIVE_DIR");
-      String workers = System.getenv("AIRSCAN_POC_WORKERS");
+      String credentialsFile = System.getenv("AIRSCAN_POC_WORKERS_FILE");
       if (host == null || host.isBlank() || project == null || project.isBlank()
-          || archive == null || archive.isBlank() || workers == null || workers.isBlank()) {
+          || archive == null || archive.isBlank()
+          || credentialsFile == null || credentialsFile.isBlank()) {
         throw new WebApplicationException("Local POC environment not configured", 503);
+      }
+      String workers;
+      try {
+        workers = Files.readString(Path.of(credentialsFile)).trim();
+      } catch (IOException unreadable) {
+        throw new WebApplicationException("Missing local POC worker credentials", 503);
       }
       Map<String, String> secrets = new HashMap<>();
       for (String entry : workers.split(";")) {

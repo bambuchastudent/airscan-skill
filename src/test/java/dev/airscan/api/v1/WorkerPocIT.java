@@ -15,6 +15,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import jakarta.inject.Inject;
 import java.nio.file.Files;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
@@ -33,8 +34,14 @@ class WorkerPocIT {
   @TempDir Path temp;
 
   private static String bearer(String id) {
-    String config = System.getenv("AIRSCAN_POC_WORKERS");
-    assertNotNull(config, "POC identity fixtures must be injected by the CI job");
+    String fixture = System.getenv("AIRSCAN_POC_WORKERS_FILE");
+    assertNotNull(fixture, "POC identity fixture path must be supplied");
+    String config;
+    try {
+      config = Files.readString(Path.of(fixture)).trim();
+    } catch (IOException failure) {
+      throw new IllegalStateException("POC token fixture missing", failure);
+    }
     for (String candidate : config.split(";")) {
       String[] pair = candidate.split("=", 2);
       if (pair[0].equals(id)) {
