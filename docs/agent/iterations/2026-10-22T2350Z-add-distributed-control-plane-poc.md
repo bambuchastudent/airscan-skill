@@ -139,3 +139,11 @@ deployment/route topology automatically.
 
 See `docs/LOCAL_POC.md` for complete local emulator, temporary token
 fixture, temp archive directory and Maven test commands.
+
+## Final independent external review — 2026-10-23
+
+**Review outcome: PASS / LOCAL POC COMPLETE; BLOCKER 0; MAJOR 0.** The independent reviewer accepted PR #5 at exact SHA `239ef9e5adcdc846299b6010a9696aa12a623933`. They directly checked final [CI 39881017972](https://github.com/bambuchastudent/airscan-skill/actions/runs/39881017972) **9/9 PASS**; 11/11 root, 2/2 worker and 5/5 Firestore Emulator integration tests, zero failures/errors/skips; the fail-closed dependency test verifies actual, readable/nonempty `worker/worker-dependencies.txt`, and the old `No such file or directory` error no longer appears. Only workflow/evidence, not POC code, changed between the technical acceptance and this reviewed HEAD.
+
+The reviewer separately accepted end-to-end worker → authentication → lease → SQLite durable outbox → HTTP submit → Firestore transactional authoritative idempotency → immutable archive → lost-response identical retry → one logical acceptance → REST read, plus concurrent lease/submission, principal isolation and expiry recovery. This is a **local/emulated POC** acceptance and does not certify deployment, production OIDC/ingress, cost limits, or route/fare semantics.
+
+**Next approved action:** mark draft PR #5 ready and merge after exact-HEAD CI for this final review-evidence note; then read actual `develop` HEAD. **OpenSpec 4.1–4.5 stay [ ]**; deployed synthetic POC (Cloud Run + real Firestore + GCS + OIDC/ingress + Firebase Hosting/cost controls) is the next independent milestone. `add-route-topology` stays deferred until deployed POC PASS. This addendum preserves all previous historical code/CI evidence and the earlier pre-review statuses rather than rewriting their timestamps.
