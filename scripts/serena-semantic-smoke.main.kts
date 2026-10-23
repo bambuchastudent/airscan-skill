@@ -66,14 +66,31 @@ async def main():
                 "relative_path":"src/main/java/dev/airscan/application/CentralRecordService.java"})
             assert "CentralRecordServiceTest" in persistence_references,persistence_references
             assert "FirestoreCentralOperationalStoreIT" in persistence_references,persistence_references
+            protocol_symbols={}
+            for name in ("WorkerProtocolResource","WorkerProtocolService",
+                         "WorkerProtocolStore","FirestoreWorkerProtocolStore",
+                         "WorkerIdentityVerifier","LocalTokenWorkerIdentityVerifier"):
+                found=await invoke("find_symbol",{
+                    "name_path_pattern":name,
+                    "relative_path":"src",
+                    "include_body":False,
+                    "substring_matching":True})
+                assert name in found,found
+                protocol_symbols[name]=found
+            protocol_refs=await invoke("find_referencing_symbols",{
+                "name_path":"WorkerProtocolService/submit",
+                "relative_path":"src/main/java/dev/airscan/application/worker/WorkerProtocolService.java"})
+            assert "WorkerProtocolResource" in protocol_refs,protocol_refs
             Path("serena-evidence/semantic.json").write_text(json.dumps({
                 "tools":sorted(required),"resource":symbols,
                 "marker_status":marker,"references":references,
                 "application_service":application_symbol,
                 "application_references":application_refs,
                 "persistence_symbols":persistence_symbols,
-                "persistence_references":persistence_references},indent=2))
-            print("Serena Java semantic lookup PASS; Iteration 1 adapters and Iteration 2 persistence symbols/references PASS")
+                "persistence_references":persistence_references,
+                "protocol_symbols":protocol_symbols,
+                "protocol_submit_references":protocol_refs},indent=2))
+            print("Serena Java semantic lookup PASS; REST/MCP, persistence and POC worker protocol references PASS")
 asyncio.run(main())
 """.trimIndent()
 val tmp=Files.createTempFile("airscan-serena-", ".py")

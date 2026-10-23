@@ -103,7 +103,7 @@ jobs:
           tests = sum(int(r.attrib.get('tests', 0)) for r in results)
           bad = sum(int(r.attrib.get(k, 0)) for r in results for k in ('failures', 'errors', 'skipped'))
           print(f'Worker tests={tests}, failed/errors/skipped={bad}')
-          assert tests >= 1 and bad == 0
+          assert tests >= 1 and bad == 0, 'Worker tests missing or skipped'
           PY
       - name: Execute worker entrypoint
         shell: bash
@@ -124,10 +124,19 @@ jobs:
         run: |
           set -euo pipefail
           ./mvnw -B -ntp -f worker/pom.xml dependency:tree -DoutputFile=worker-dependencies.txt
-          if grep -Ei 'google-cloud-firestore|google-cloud-storage|firebase-admin' worker-dependencies.txt; then
+          # Maven resolves -DoutputFile relative to worker/pom.xml, not repo root.
+          # Missing, empty or unreadable evidence must fail this job before grep.
+          test -s worker/worker-dependencies.txt
+          test -r worker/worker-dependencies.txt
+          echo 'Worker dependency tree exists and is non-empty: worker/worker-dependencies.txt'
+          echo '----- Worker dependency tree (reviewable evidence) -----'
+          cat worker/worker-dependencies.txt
+          echo '----- End worker dependency tree -----'
+          if grep -Ei 'google-cloud-firestore|google-cloud-storage|firebase-admin' worker/worker-dependencies.txt; then
             echo 'Worker must not depend on central Google persistence SDK' >&2
             exit 1
           fi
+          echo 'Worker central Google SDK isolation: PASS'
 
   openspec:
     runs-on: ubuntu-24.04
@@ -408,6 +417,15 @@ jobs:
           done
           cat /tmp/airscan-firestore-emulator.log
           exit 1
+      - name: Generate ephemeral POC worker tokens and archive directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          fixture=$(mktemp)
+          printf 'worker-a=%s;worker-b=%s' "$(openssl rand -hex 24)" "$(openssl rand -hex 24)" > "$fixture"
+          echo "AIRSCAN_POC_WORKERS_FILE=$fixture" >> "$GITHUB_ENV"
+          echo "AIRSCAN_POC_ARCHIVE_DIR=$(mktemp -d)" >> "$GITHUB_ENV"
       - name: Emulator integration test is mandatory
         shell: bash
         run: |
@@ -420,7 +438,7 @@ jobs:
           tests=sum(int(ET.parse(p).getroot().attrib.get('tests',0)) for p in paths)
           bad=sum(int(ET.parse(p).getroot().attrib.get(k,0)) for p in paths for k in ('failures','errors','skipped'))
           print(f'Firestore emulator integration tests={tests}, failures/errors/skipped={bad}')
-          assert tests >= 1 and bad == 0
+          assert tests >= 5 and bad == 0, 'Mandatory Firestore and four POC scenarios missing'
           PY
       - name: Emulator logs on failure
         if: failure()
