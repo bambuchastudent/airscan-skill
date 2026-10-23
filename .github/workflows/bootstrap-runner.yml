@@ -124,10 +124,19 @@ jobs:
         run: |
           set -euo pipefail
           ./mvnw -B -ntp -f worker/pom.xml dependency:tree -DoutputFile=worker-dependencies.txt
-          if grep -Ei 'google-cloud-firestore|google-cloud-storage|firebase-admin' worker-dependencies.txt; then
+          # Maven resolves -DoutputFile relative to worker/pom.xml, not repo root.
+          # Missing, empty or unreadable evidence must fail this job before grep.
+          test -s worker/worker-dependencies.txt
+          test -r worker/worker-dependencies.txt
+          echo 'Worker dependency tree exists and is non-empty: worker/worker-dependencies.txt'
+          echo '----- Worker dependency tree (reviewable evidence) -----'
+          cat worker/worker-dependencies.txt
+          echo '----- End worker dependency tree -----'
+          if grep -Ei 'google-cloud-firestore|google-cloud-storage|firebase-admin' worker/worker-dependencies.txt; then
             echo 'Worker must not depend on central Google persistence SDK' >&2
             exit 1
           fi
+          echo 'Worker central Google SDK isolation: PASS'
 
   openspec:
     runs-on: ubuntu-24.04

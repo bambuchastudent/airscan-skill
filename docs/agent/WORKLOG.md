@@ -356,3 +356,12 @@ change complete/archive or begin Iteration 2 before that review.
 
 **Local reproduction:** `docs/LOCAL_POC.md`; full handoff `docs/agent/iterations/2026-10-22T2350Z-add-distributed-control-plane-poc.md`. **Next:** independent review of draft PR #5 only; do not merge or begin cloud deployment/route topology automatically.
 
+## 2026-10-23 — PR #5 worker dependency isolation fail-closed evidence remediation
+
+**Reviewed base:** `c6be76b201ef89fee4d4709d7cd1a182ae65a6b8`. **Reviewed CI:** `39874333647` (9/9 PASS in the aggregate, but worker SDK isolation assertion **false-green**). Independent external review accepted local synthetic POC technical semantics and identified one **MAJOR evidence defect**; this remediation is **workflow/evidence only**. No application, worker, Firestore, SQLite, OpenSpec contract, archive, auth, deployment or route/provider code modified.
+
+**Root cause reproduced from original CI log:** `./mvnw -B -ntp -f worker/pom.xml dependency:tree -DoutputFile=worker-dependencies.txt` wrote `/home/runner/work/airscan-skill/airscan-skill/worker/worker-dependencies.txt`; a subsequent `grep ... worker-dependencies.txt` from repo root failed `grep: worker-dependencies.txt: No such file or directory`. Because grep ran in a shell `if` condition, its error status 2 counted as a false absence of forbidden packages and did **not** fail the job. Thus the old 9/9 green CI does NOT verify worker Google SDK isolation.
+
+**Remediation:** Keep Maven output argument unchanged, assert `test -s worker/worker-dependencies.txt` and `test -r worker/worker-dependencies.txt` under `set -euo pipefail`; emit an explicit presence/non-empty log line; display `cat worker/worker-dependencies.txt` as auditable dependency-tree evidence; use `grep -Ei 'google-cloud-firestore|google-cloud-storage|firebase-admin' worker/worker-dependencies.txt` with an explicit failure on matches; print a success line only after those checks. Missing/empty/unreadable file fails **before** conditional grep. No new dependencies.
+
+**Evidence status at change authoring:** Await new exact-HEAD 9/9 CI to replace the false-green isolation evidence; all baseline functional POC tests remain unchanged. Preserve historical original CI and its defect; do not rewrite evidence. PR #5 remains draft/unmerged and must await final independent metadata/evidence review.
