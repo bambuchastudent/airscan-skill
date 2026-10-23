@@ -69,6 +69,47 @@ is the fifth emulator test. The accepted result resides in one authoritative
 single-job Firestore document and the archived immutable content path is verified.
 No live Google credentials or production cloud network calls.
 
+## Final independent technical review: worker dependency CI evidence remediation
+
+**External technical review:** Local POC implementation **PASS**; one **MAJOR**
+false-green worker dependency isolation CI finding, with no protocol bug.
+Original reviewed HEAD `c6be76b201ef89fee4d4709d7cd1a182ae65a6b8`
+and original CI `39874333647` are preserved as historical evidence
+but **do not independently demonstrate worker SDK isolation**.
+
+Maven's `dependency:tree -DoutputFile=worker-dependencies.txt` with
+`-f worker/pom.xml` writes to `worker/worker-dependencies.txt`;
+the former gate mistakenly checked `worker-dependencies.txt` at repo
+root, yielding `grep: ... No such file or directory` inside an `if`,
+which did not fail the CI job.
+
+Only workflow and evidence were changed. A verified remediation commit
+`3c7ddcd469d114e5a40164e2ee5451ee5bd942b1` has full
+[CI 39880697503](https://github.com/bambuchastudent/airscan-skill/actions/runs/39880697503)
+**9/9 PASS**. The new gate executes `test -s` and `test -r`
+against `worker/worker-dependencies.txt`, prints an explicit
+presence/nonempty marker and the entire dependency tree, and greps
+the exact actual path for `google-cloud-firestore`,
+`google-cloud-storage` and `firebase-admin`.
+CI log confirms no forbidden dependency, no missing file and an explicit
+`Worker central Google SDK isolation: PASS` line. Worker top-level
+dependencies shown: Jackson JSON, SQLite JDBC and test-only JUnit.
+Missing/empty/unreadable evidence now fails closed.
+
+The complete unchanged test matrix on that remediation commit:
+**11/11** root tests PASS, **2/2** worker tests PASS, **5/5**
+Firestore Emulator integration tests PASS (zero failures, errors,
+skips); OpenSpec strict, Graphify, Serena, static analysis,
+worker-secret/runtime-artifact gate, and formal bootstrap regression
+jobs PASS. No production or worker source changes. No cloud, airline,
+route or fare development.
+
+**Review status:** `READY_FOR_FINAL_EXTERNAL_POC_REVIEW`. PR #5
+remains **draft/unmerged** pending final independent metadata/evidence
+re-review. The final documentation-only closeout commit should receive
+its own exact-HEAD CI; the code/workflow gate fix and its real evidence
+are already independently reproducible at the linked SHA.
+
 ## Failures and verification limitations
 
 Historical failed and cancelled CI candidates, including Spotless findings
