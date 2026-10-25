@@ -27,6 +27,10 @@ class AenaSanitizedExcerptParserTest {
     var result = parser.parse(fixture(), "VLC");
     assertEquals(6, result.sourceRows());
     assertEquals(5, result.routes().size());
+    assertEquals(1, result.duplicateDestinationRows());
+    assertEquals(0, result.rejectedDestinationRows());
+    assertTrue(result.candidateRowsReconciled());
+    assertTrue(result.coverageIsKnown());
     assertFalse(result.hasGaps());
     assertEquals(result, parser.parse(fixture(), "vlc"));
     var bilbao =
@@ -58,6 +62,10 @@ class AenaSanitizedExcerptParserTest {
     var result = parser.parse(damaged, "VLC");
     assertEquals(3, result.sourceRows());
     assertEquals(1, result.routes().size());
+    assertEquals(0, result.duplicateDestinationRows());
+    assertEquals(2, result.rejectedDestinationRows());
+    assertTrue(result.candidateRowsReconciled());
+    assertFalse(result.coverageIsKnown());
     assertEquals("DIRECT:VLC:LIS", result.routes().get(0).routeKey());
     assertTrue(result.hasGaps());
     assertTrue(result.omissions().size() >= 3);

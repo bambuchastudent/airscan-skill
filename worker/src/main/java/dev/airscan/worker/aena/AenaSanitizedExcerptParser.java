@@ -23,7 +23,12 @@ public final class AenaSanitizedExcerptParser {
 
   public record ParsedRoute(String routeKey, List<String> carrierNames) {}
 
-  public record ParseReport(List<ParsedRoute> routes, int sourceRows, List<String> omissions) {
+  public record ParseReport(
+      List<ParsedRoute> routes,
+      int sourceRows,
+      int duplicateDestinationRows,
+      int rejectedDestinationRows,
+      List<String> omissions) {
     public ParseReport {
       routes = List.copyOf(routes);
       omissions = List.copyOf(omissions);
@@ -31,6 +36,16 @@ public final class AenaSanitizedExcerptParser {
 
     public boolean hasGaps() {
       return !omissions.isEmpty();
+    }
+
+    /** Reconciles only candidate lines recognized by this synthetic excerpt grammar. */
+    public boolean candidateRowsReconciled() {
+      return sourceRows == routes.size() + duplicateDestinationRows + rejectedDestinationRows;
+    }
+
+    /** Cannot assert full source coverage when a changed/noncandidate line was skipped. */
+    public boolean coverageIsKnown() {
+      return candidateRowsReconciled() && !hasGaps();
     }
   }
 
@@ -45,6 +60,8 @@ public final class AenaSanitizedExcerptParser {
     List<String> omissions = new ArrayList<>();
     String current = null;
     int rows = 0;
+    int duplicates = 0;
+    int rejected = 0;
     int lineNo = 0;
     for (String raw : text.split("\\R")) {
       lineNo++;
@@ -57,16 +74,21 @@ public final class AenaSanitizedExcerptParser {
         Matcher matcher = DESTINATION.matcher(line);
         if (!matcher.matches()) {
           omissions.add("line " + lineNo + ": invalid destination identity");
+          rejected++;
           current = null;
           continue;
         }
         String destination = matcher.group(1).toUpperCase(Locale.ROOT);
         if ("VLC".equals(destination)) {
           omissions.add("line " + lineNo + ": self route");
+          rejected++;
           current = null;
           continue;
         }
         current = "DIRECT:VLC:" + destination;
+        if (canonical.containsKey(current)) {
+          duplicates++;
+        }
         canonical.computeIfAbsent(current, ignored -> new TreeSet<>());
         continue;
       }
@@ -103,6 +125,6 @@ public final class AenaSanitizedExcerptParser {
     if (rows == 0) {
       omissions.add("No destination rows recognized");
     }
-    return new ParseReport(routes, rows, omissions);
+    return new ParseReport(routes, rows, duplicates, rejected, omissions);
   }
 }
