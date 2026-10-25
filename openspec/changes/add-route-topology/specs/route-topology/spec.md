@@ -6,32 +6,49 @@ Maintain an explainable graph of direct air-route topology from configured origi
 
 ## ADDED Requirements
 
-### Requirement: VLC Route/Date Discovery POC
+### Requirement: Airport-wide VLC direct-route catalog is the first milestone
 
-The system SHALL support a local POC query for direct destinations from VLC over a caller-supplied inclusive date interval using real source observations processed through the accepted worker/control-plane boundary.
+The system SHALL first discover and preserve the advertised direct destination network of Valencia (VLC) across all carriers from an appropriate airport-wide topology source. Airline-specific pages SHALL NOT be treated as the complete airport network.
 
-#### Scenario: Real VLC destinations are requested for a date interval
+#### Scenario: VLC route catalog requested without dates
 
-- **WHEN** a consumer requests direct destinations from VLC with valid inclusive `from` and `to` dates
-- **THEN** every returned destination has at least one positive source observation whose availability date falls within that interval
-- **AND** the response includes source provenance and observation freshness
+- **WHEN** a consumer requests the known direct routes from VLC without a date filter
+- **THEN** it receives all normalized direct destinations supported by the successfully ingested airport-wide source snapshot
+- **AND** every route has source/scan/freshness provenance
+- **AND** multiple carrier observations do not fork a canonical origin–destination route
 
-#### Scenario: Route exists outside requested dates
+#### Scenario: Airport-wide source is incomplete or fails
 
-- **WHEN** route-topology evidence exists but no positive availability observation falls inside the requested interval
-- **THEN** that route is not returned as date-available
-- **AND** the system does not treat the route itself as deleted or disproven
+- **WHEN** a source scan is partial, fails or its coverage cannot be established
+- **THEN** the system exposes that failure/incomplete-coverage status
+- **AND** does not infer that absent routes have ceased to exist
 
-#### Scenario: Provider scan fails
+### Requirement: Dated VLC availability is a separate enrichment
 
-- **WHEN** the live source request or parser fails
-- **THEN** the system records/surfaces failure or staleness
-- **AND** it does not convert that failure into negative route or availability evidence
+The system SHALL support an inclusive date-range query that adds **positive observed** flight-date evidence to the existing airport-wide VLC topology catalog, preserving explicit coverage/unknown statuses.
 
-#### Scenario: No matching availability exists
+#### Scenario: Availability confirmed for selected dates
 
-- **WHEN** a successful applicable scan yields no positive availability observations inside the requested interval
-- **THEN** the query returns no matching destinations for that evidence window without inventing routes, dates, or fares
+- **WHEN** a date source reports positive direct-flight dates for a known VLC route inside a consumer-supplied inclusive interval
+- **THEN** the response links those dates to that canonical route with the date source's provenance and observation freshness
+
+#### Scenario: Airline-only date source covers a subset
+
+- **WHEN** one airline-specific source supplies dated evidence for some known VLC routes
+- **THEN** the system reports those as confirmed observations and marks uncovered routes UNKNOWN/UNCOVERED
+- **AND** the result SHALL NOT claim to represent all available flights from VLC on the dates
+
+#### Scenario: No positive date observations
+
+- **WHEN** an existing VLC route has no positive observed dates inside the selected interval
+- **THEN** its airport-wide route existence remains intact
+- **AND** the date result is UNKNOWN/UNCONFIRMED unless an independently defined complete negative-evidence policy applies
+
+#### Scenario: Date provider fails
+
+- **WHEN** source fetch or parsing fails
+- **THEN** the system surfaces error/staleness
+- **AND** it does not turn failure into a claim of zero flights
 
 ### Requirement: Configured origin airports
 

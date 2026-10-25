@@ -2,22 +2,29 @@
 
 ## 0. VLC Route/Date Discovery POC milestone
 
-### RT-1 — contracts, source research, fixtures
+### RT-1 — airport-wide contracts, source research, fixtures
 
-- [ ] 0.1 Define the minimum airport, carrier, direct-route, source, scan, route-evidence, and dated-availability contracts needed by the VLC POC; align route identity/provenance with INV-ROUTE-001/002 and INV-EVIDENCE-001 and verify invalid endpoint/date cases.
-- [ ] 0.2 Define separate source-agnostic topology and narrow date-availability provider contracts with explicit provenance and failure semantics; verify offline contract tests require no network.
-- [ ] 0.3 Research and document exactly one first real source path capable of supporting VLC direct-route discovery and date availability, including access method, source ownership, rate/usage constraints, stability evidence, and why the selected interface is acceptable. Do not claim undocumented private endpoints are stable.
-- [ ] 0.4 Capture sanitized fixtures for the selected source and implement deterministic parser/normalization tests; keep any live smoke explicitly separate.
-- [ ] 0.5 Define the versioned local REST query contract for origin + inclusive date interval and verify it distinguishes route existence, positive dated availability, and scan/provider failure.
+- [ ] 0.1 Define canonical airport, carrier, direct-route, source/scan and route-evidence contracts for all advertised direct routes from VLC. Canonical route identity must not depend on carrier or scan timestamp; test invariants.
+- [ ] 0.2 Define a topology provider and a **separate** date-availability observation provider, each with typed failures and provenance.
+- [ ] 0.3 Research and validate official **Aena VLC destination catalog** as the first airport-wide topology source; document coverage, freshness, legal/technical access, carrier treatment and limitations. Do not select Ryanair as the route catalog.
+- [ ] 0.4 Capture minimal sanitized Aena fixtures and build deterministic parsing/normalization tests for a representative multi-carrier source snapshot; preserve all observed destination IDs.
+- [ ] 0.5 Design local topology endpoint plus inclusive date-range query with explicit CONFIRMED versus UNKNOWN/UNCOVERED semantics. Research date sources without prematurely choosing a single-airline solution.
 
-### RT-2 — real VLC vertical slice
+### RT-2 — real airport-wide VLC topology
 
-- [ ] 0.6 Implement exactly one real provider path for VLC and execute it from the portable worker runtime; do not add a second provider in this milestone.
-- [ ] 0.7 Persist normalized route + dated-availability evidence through the existing authenticated worker/control-plane submission path; verify workers never mutate Firestore directly and repeated accepted submissions are idempotent.
-- [ ] 0.8 Implement the local VLC/date-range query and verify every returned destination has at least one supporting date inside the requested inclusive interval plus source/provenance/freshness.
-- [ ] 0.9 Run a clean-store local/emulated E2E: real VLC source observation -> worker -> SQLite/outbox as applicable -> authenticated submit -> central persistence -> REST query; verify provider failure is not interpreted as a negative route result.
-- [ ] 0.10 Run one timestamped live smoke against the selected real source, record sanitized evidence, and document source limitations without making the live network call a deterministic CI requirement.
-- [ ] 0.11 Publish reproducible local-run instructions and an iteration handoff proving the VLC Route/Date Discovery POC acceptance criteria; stop for independent external review before cloud deployment resumes.
+- [ ] 0.6 Implement and execute one official airport-wide VLC topology source adapter (Aena if validated); do not hardcode current destination count.
+- [ ] 0.7 Ingest VLC route/evidence observations through existing authenticated worker, SQLite outbox and central idempotent control-plane submission; no worker direct Firestore writes.
+- [ ] 0.8 Implement local `VLC` known-direct-route catalog REST query with carrier/source/scan/freshness provenance.
+- [ ] 0.9 Clean-store local/emulated E2E, retry dedup and live smoke; compare stored route set with captured official source snapshot and explain every omission.
+- [ ] 0.10 Publish RT-2 evidence and request independent topology gate review before dated provider integration.
+
+### RT-3 — date availability over the VLC catalog
+
+- [ ] 0.11 Select/verify dated source path(s) with lawful low-volume access, coverage and freshness boundaries; no airline source can silently stand for the full airport.
+- [ ] 0.12 Implement positive dated availability observations linked to canonical VLC routes and source/scan, using the accepted worker/control-plane path.
+- [ ] 0.13 Implement inclusive date-range query with CONFIRMED dates and UNKNOWN/UNCOVERED, stale, failed-source states; no false global negatives.
+- [ ] 0.14 Verify local E2E, offline fixture tests and timestamped live smoke; document covered/uncovered proportion of known VLC catalog and user-facing limitations.
+- [ ] 0.15 Produce reproducible local instructions and evidence; independent **PASS / VLC ROUTE-DATE POC COMPLETE** required before cloud deployment.
 
 ## 1. Domain and persistence after VLC POC
 
@@ -48,4 +55,4 @@
 
 ## Milestone ordering constraint
 
-After tasks 0.1–0.11 receive independent **PASS / VLC ROUTE-DATE POC COMPLETE**, pause this change and return to `add-distributed-control-plane` tasks 4.1–4.5 for the deployed POC. Do not automatically continue to topology expansion tasks 1.x/3.x/4.x.
+After tasks 0.1–0.15 receive independent **PASS / VLC ROUTE-DATE POC COMPLETE**, pause this change and return to `add-distributed-control-plane` tasks 4.1–4.5 for the deployed POC. Do not automatically continue to topology expansion tasks 1.x/3.x/4.x.

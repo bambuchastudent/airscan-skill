@@ -109,9 +109,9 @@ The `bootstrap-agentic-foundation` change is complete, independently reviewed **
 
 The local distributed-control-plane POC is complete and merged. The next milestone is intentionally user-value-first:
 
-1. **VLC Route/Date Discovery POC** — one real source, local worker/control-plane ingestion, and a VLC + date-range query; no fares.
+1. **VLC Route/Date Discovery POC** — first the complete published VLC direct-route catalog across airlines (Aena source candidate), then separate positive date evidence for a requested interval with explicit unknown coverage; no fares.
 2. Resume `add-distributed-control-plane` tasks 4.1–4.5 for the deployed POC.
 3. Resume broader `add-route-topology` work for the full configured origin set and geographic candidates.
 4. `add-durable-scan-retention` and later fare/ranking work.
 
-See [docs/MILESTONES.md](docs/MILESTONES.md). Do not jump to provider mass-implementation: the VLC POC must use exactly one reviewed source path and receive independent review before broader expansion.
+See [docs/MILESTONES.md](docs/MILESTONES.md). Do not jump to provider mass-implementation: the initial airport-wide route catalog must have a reviewed source; separate airline/date sources must not be presented as whole-airport coverage and receive independent review before broader expansion.
