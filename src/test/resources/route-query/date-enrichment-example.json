@@ -1,0 +1,36 @@
+{
+  "origin": "VLC",
+  "from": "2026-12-10",
+  "to": "2026-12-20",
+  "topologySourceCoverage": "PARTIAL",
+  "dateCoverage": {
+    "scope": "CARRIER_PARTIAL",
+    "status": "UNKNOWN",
+    "uncoveredRouteCount": 1,
+    "failedSources": []
+  },
+  "routes": [
+    {
+      "routeId": "DIRECT:VLC:AMS",
+      "availabilityStatus": "UNCOVERED",
+      "matchingAvailabilityDates": [],
+      "dateEvidence": []
+    },
+    {
+      "routeId": "DIRECT:VLC:LIS",
+      "availabilityStatus": "CONFIRMED",
+      "matchingAvailabilityDates": [
+        "2026-12-14"
+      ],
+      "dateEvidence": [
+        {
+          "flightDate": "2026-12-14",
+          "carrier": "UNKNOWN",
+          "sourceId": "example-date-source",
+          "scanId": "example-date-scan",
+          "observedAt": "2026-10-25T15:00:00Z"
+        }
+      ]
+    }
+  ]
+}
