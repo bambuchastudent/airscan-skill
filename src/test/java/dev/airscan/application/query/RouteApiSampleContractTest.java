@@ -10,7 +10,9 @@ import java.io.IOException;
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 
-/** Offline JSON examples constrain intended future REST shapes; they do not start REST endpoints. */
+/**
+ * Offline JSON examples constrain intended future REST shapes; they do not start REST endpoints.
+ */
 class RouteApiSampleContractTest {
   private final ObjectMapper mapper = new ObjectMapper();
 
@@ -49,8 +51,11 @@ class RouteApiSampleContractTest {
     assertTrue(response.path("routes").get(0).path("matchingAvailabilityDates").isEmpty());
     var confirmed = response.path("routes").get(1);
     assertEquals("CONFIRMED", confirmed.path("availabilityStatus").asText());
-    assertTrue(query.includes(LocalDate.parse(confirmed.path("matchingAvailabilityDates").get(0).asText())));
-    assertEquals("example-date-source", confirmed.path("dateEvidence").get(0).path("sourceId").asText());
+    assertTrue(
+        query.includes(
+            LocalDate.parse(confirmed.path("matchingAvailabilityDates").get(0).asText())));
+    assertEquals(
+        "example-date-source", confirmed.path("dateEvidence").get(0).path("sourceId").asText());
     assertFalse(confirmed.has("fares"));
   }
 }
