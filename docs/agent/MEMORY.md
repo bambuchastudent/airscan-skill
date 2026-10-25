@@ -2,6 +2,13 @@
 
 This file is the curated durable memory for agents working on this repository. Keep it concise and factual. Update it when durable project state changes; use WORKLOG.md for chronology.
 
+## 2026-10-25 RT-1 external review remediation — NEEDS_SOURCE_DECISION
+
+- Read independent review comment https://github.com/bambuchastudent/airscan-skill/pull/8#issuecomment-6400021207 : accepted tasks 0.1, 0.2, 0.5; source blockers 0.3 and 0.4 remain.
+- Aena website is a public airport-wide route display but its legal notice §8 restricts exploitation/reproduction without prior written permission. Raw status/redirects/DOM/cookies/JS and Java 25 fetch were not validated; container DNS failed. No permission/structural fixture obtained.
+- Dataestur has a documented automated `AENA_DESTINOS_DL` XLSX API but it describes **monthly traffic**, not a proven 2026 advertised network, and redistribution terms/schema/coverage require review. Amadeus Airport Routes has authenticated documented access but may return city rather than airport IATA codes and has unverified VLC completeness. OpenFlights routes are licensed but last updated 2014. None is an approved equivalent replacement.
+- Existing manually reconstructed Aena excerpt now has offline recognized-line reconciliation diagnostics (duplicates and rejected rows); this **cannot** validate real Aena HTML or full catalog coverage. 0.3/0.4 remain OPEN. Option A: Aena written authorization/export; B: explicitly review a licensed equivalent current airport-wide provider; C: separately revise product scope to historical traffic. No RT-2/RT-3, no PR merge pending source decision. See `docs/research/aena-vlc-rt1.md` and `docs/agent/iterations/2026-10-25T1550Z-vlc-route-date-rt1.md`.
+
 ## RT-1 airport-wide VLC implementation candidate (2026-10-25)
 
 - Planning correction PR #7 merged; implementation base `develop` SHA `301d979f66b765651303337876fe8998a2b2ca99`, post-merge CI `40207677493` 9/9 PASS. Draft PR #8 uses dedicated `feat/vlc-aena-topology-rt1` branch. PR #7 supersedes Ryanair-first topology research; Aena's published VLC destination catalog is the primary airport-wide candidate. Never treat an airline-only page as full VLC coverage.

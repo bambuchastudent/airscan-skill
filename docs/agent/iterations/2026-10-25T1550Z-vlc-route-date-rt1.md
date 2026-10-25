@@ -36,3 +36,13 @@ Inspect exact-HEAD CI, fix candidate failures, then independent RT-1 review. Res
 - `0.4` **open**: reconstructed fact-excerpt normalization is offline-tested; real captured site fixture and source catalog reconciliation are not.
 - `0.5` complete: future two-endpoint JSON design, inclusive `LocalDate` tests, explicit UNKNOWN/UNCOVERED/CONFIRMED and short Aena Infovuelos date-horizon research. No date source integrated.
 - **Disposition: NEEDS_CHANGES**, not READY_FOR_EXTERNAL_RT1_REVIEW under the user's full RT-1 criteria. External review of bounded candidate PR #8 is useful, but cannot waive source validation without explicit change approval.
+
+## External source remediation and review decision — 2026-10-25
+
+- Prior external reviewer comment: https://github.com/bambuchastudent/airscan-skill/pull/8#issuecomment-6400021207 at `1b5336f906be607bbfc7b5464ebe5186d46ad52b`, CI `40209473762` (9/9 PASS). 0.1, 0.2, 0.5 accepted; 0.3 and 0.4 explicitly blocked.
+- Public Aena site content and 84/37 displayed snapshot count observed, but Aena §8 written-permission requirement prevents claiming automated/cached/reproduced source use; true HTML/status/DOM and worker fetch not available because DNS `curl: (6)` failure. No lawful source-native HTML fixture captured.
+- Dataestur `AENA_DESTINOS_DL` is an explicit OpenAPI XLSX endpoint designed for software, yet describes historical monthly traffic, not verified advertised airport-wide VLC topology; Dataestur general content redistribution rights also unresolved. Amadeus Airport Routes bearer API may supply city codes instead of airport codes, unverified current coverage. OpenFlights routes last updated 2014. No alternative passed all product/licensing gates.
+- Incremental code improvement: synthetic excerpt parser now reports duplicate/rejected candidate rows and tests deterministic reconciliation on its own custom structure; **not** a genuine Aena DOM fixture or an assertion of real catalog completeness. See `docs/research/aena-vlc-rt1.md` for accurate provenance, URLs, restrictions and architecture decision request.
+- **0.1 PASS, 0.2 PASS, 0.3 OPEN, 0.4 OPEN, 0.5 PASS.** Preserve task checkboxes; no false green source acceptance. No RT-2/RT-3, fares, deployment, or worker protocol changes.
+- **Disposition: NEEDS_SOURCE_DECISION** (Aena written permission/export is preferred; licensed complete airport-wide replacement requires separate architecture review).
+- Remediation exact final HEAD / GitHub CI to be verified; before that, do not claim the new code or documentation CI passed.
