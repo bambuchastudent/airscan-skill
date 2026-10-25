@@ -19,11 +19,22 @@ class RouteSearchQueryTest {
 
   @Test
   void invalidInputIsRejected() {
-    assertThrows(IllegalArgumentException.class, () -> RouteSearchQuery.parse(null, "2026-12-10", "2026-12-20"));
-    assertThrows(IllegalArgumentException.class, () -> RouteSearchQuery.parse("VLC", null, "2026-12-20"));
-    assertThrows(IllegalArgumentException.class, () -> RouteSearchQuery.parse("V1C", "2026-12-10", "2026-12-20"));
-    assertThrows(IllegalArgumentException.class, () -> RouteSearchQuery.parse("VLC", "2026-02-30", "2026-12-20"));
-    assertThrows(IllegalArgumentException.class, () -> RouteSearchQuery.parse("VLC", "2026-12-21", "2026-12-20"));
-    assertThrows(IllegalArgumentException.class, () -> RouteSearchQuery.parse("VLC", "2026-01-01", "2027-12-31"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> RouteSearchQuery.parse(null, "2026-12-10", "2026-12-20"));
+    assertThrows(
+        IllegalArgumentException.class, () -> RouteSearchQuery.parse("VLC", null, "2026-12-20"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> RouteSearchQuery.parse("V1C", "2026-12-10", "2026-12-20"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> RouteSearchQuery.parse("VLC", "2026-02-30", "2026-12-20"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> RouteSearchQuery.parse("VLC", "2026-12-21", "2026-12-20"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> RouteSearchQuery.parse("VLC", "2026-01-01", "2027-12-31"));
   }
 }

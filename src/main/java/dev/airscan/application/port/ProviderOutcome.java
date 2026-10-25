@@ -34,7 +34,8 @@ public record ProviderOutcome<T>(
     if (status != Status.SUCCESS_WITH_OBSERVATIONS
         && status != Status.SUCCESS_NO_OBSERVATIONS
         && (!observations.isEmpty() || coverage == Coverage.COMPLETE)) {
-      throw new IllegalArgumentException("Failed scan cannot report positive data or full coverage");
+      throw new IllegalArgumentException(
+          "Failed scan cannot report positive data or full coverage");
     }
   }
 }

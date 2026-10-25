@@ -24,8 +24,7 @@ public record RouteSearchQuery(Airport origin, LocalDate from, LocalDate to) {
 
   public static RouteSearchQuery parse(String origin, String from, String to) {
     try {
-      return new RouteSearchQuery(
-          new Airport(origin), LocalDate.parse(from), LocalDate.parse(to));
+      return new RouteSearchQuery(new Airport(origin), LocalDate.parse(from), LocalDate.parse(to));
     } catch (DateTimeParseException | NullPointerException error) {
       throw new IllegalArgumentException("Malformed or missing date", error);
     }
