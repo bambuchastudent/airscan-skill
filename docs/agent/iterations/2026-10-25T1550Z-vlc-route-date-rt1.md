@@ -46,3 +46,8 @@ Inspect exact-HEAD CI, fix candidate failures, then independent RT-1 review. Res
 - **0.1 PASS, 0.2 PASS, 0.3 OPEN, 0.4 OPEN, 0.5 PASS.** Preserve task checkboxes; no false green source acceptance. No RT-2/RT-3, fares, deployment, or worker protocol changes.
 - **Disposition: NEEDS_SOURCE_DECISION** (Aena written permission/export is preferred; licensed complete airport-wide replacement requires separate architecture review).
 - Remediation exact final HEAD / GitHub CI to be verified; before that, do not claim the new code or documentation CI passed.
+
+## Remediation code verification — 2026-10-25T16:29Z
+- Exact code SHA `1e9ec42f3aa63c29c7fa30b269969a80d67d409b`, CI https://github.com/bambuchastudent/airscan-skill/actions/runs/40211572694 — **9/9 PASS**.
+- Root Maven **19/19**, worker Maven **4/4**, Firestore Emulator **5/5**, all zero failures/errors/skips; Spotless, Checkstyle, strict OpenSpec, Graphify/Serena existing smoke, worker SDK isolation, bootstrap formal checks PASS.
+- Real Aena DOM, rights, Java fetch and actual catalog reconciliation remain **unverified**. 0.3/0.4 stay open; documentation HEAD needs own CI. Status: **NEEDS_SOURCE_DECISION**.

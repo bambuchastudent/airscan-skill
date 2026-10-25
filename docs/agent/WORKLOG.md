@@ -414,3 +414,9 @@ change complete/archive or begin Iteration 2 before that review.
 - Verification: new exact-HEAD full CI underway; log/report must distinguish historical code CI `40209473762` at reviewed SHA from new remediation CI. Container Java `21.0.12`, project requires Java 25; direct local Maven/OpenSpec/Emulator cannot be claimed. Await new GitHub CI rather than inferring PASS.
 - Source architecture decision requested: secure written Aena use/export permission incl minimal structural test fixture, or explicitly approve and validate a current permitted airport-wide alternative with airport-IATA identities. If not attainable, hold work as `NEEDS_SOURCE_DECISION`; no RT-2/RT-3 or PR merge.
 
+
+## 2026-10-25T16:29Z — remediation code exact-SHA verification and source gate
+- Code remediation SHA `1e9ec42f3aa63c29c7fa30b269969a80d67d409b`, GitHub CI https://github.com/bambuchastudent/airscan-skill/actions/runs/40211572694 **9/9 PASS**: java-and-contract, firestore-emulator, openspec, graphify-java, serena-java, java-symbol-smoke, alloy-bootstrap, tlc-bootstrap, dafny-bootstrap.
+- CI logs: `./mvnw -B -ntp spotless:check` PASS; `./mvnw -B -ntp checkstyle:check` PASS; `./mvnw -B -ntp clean verify` PASS (**19/19 root**); `./mvnw -B -ntp -f worker/pom.xml clean verify` PASS (**4/4 worker**); `./mvnw -B -ntp -Pfirestore-emulator verify` PASS (**5/5 IT**), zero errors/failures/skips. Two synthetic excerpt parser tests are included in worker 4/4. Correct worker dependency file present and nonempty/readable, `Worker central Google SDK isolation: PASS`. Strict archived/changes OpenSpec, Graphify/Serena baseline smoke PASS. Bootstrap Alloy/TLC/Dafny PASS, not route proofs.
+- Subsequent documentation-only closeout commit requires its own exact-HEAD CI before describing that HEAD as verified. OpenSpec 0.1, 0.2, 0.5 [x]; 0.3, 0.4 [ ]. Public readability is not Aena automated-use permission. **NEEDS_SOURCE_DECISION**; draft PR, do not merge or begin RT-2/RT-3.
+

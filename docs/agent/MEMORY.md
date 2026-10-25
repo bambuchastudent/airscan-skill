@@ -4,6 +4,8 @@ This file is the curated durable memory for agents working on this repository. K
 
 ## 2026-10-25 RT-1 external review remediation — NEEDS_SOURCE_DECISION
 
+- Remediation code exact SHA `1e9ec42f3aa63c29c7fa30b269969a80d67d409b`; GitHub CI `40211572694` 9/9 PASS (19 root, 4 worker, 5 Emulator IT). Final documentation HEAD has separate CI. Green regression evidence does not resolve 0.3/0.4 or grant source rights.
+
 - Read independent review comment https://github.com/bambuchastudent/airscan-skill/pull/8#issuecomment-6400021207 : accepted tasks 0.1, 0.2, 0.5; source blockers 0.3 and 0.4 remain.
 - Aena website is a public airport-wide route display but its legal notice §8 restricts exploitation/reproduction without prior written permission. Raw status/redirects/DOM/cookies/JS and Java 25 fetch were not validated; container DNS failed. No permission/structural fixture obtained.
 - Dataestur has a documented automated `AENA_DESTINOS_DL` XLSX API but it describes **monthly traffic**, not a proven 2026 advertised network, and redistribution terms/schema/coverage require review. Amadeus Airport Routes has authenticated documented access but may return city rather than airport IATA codes and has unverified VLC completeness. OpenFlights routes are licensed but last updated 2014. None is an approved equivalent replacement.
