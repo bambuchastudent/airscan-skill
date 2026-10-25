@@ -107,10 +107,11 @@ See [AGENTS.md](AGENTS.md) for mandatory agent behavior and [docs/TOOLING.md](do
 
 The `bootstrap-agentic-foundation` change is complete, independently reviewed **PASS / READY**, and merged into `develop` as `a2e527c153f403ca47aabcec70a9460f75499909`.
 
-The remaining OpenSpec changes are intentionally staged:
+The local distributed-control-plane POC is complete and merged. The next milestone is intentionally user-value-first:
 
-1. `add-distributed-control-plane` — **current implementation stage**
-2. `add-route-topology`
-3. `add-durable-scan-retention`
+1. **VLC Route/Date Discovery POC** — one real source, local worker/control-plane ingestion, and a VLC + date-range query; no fares.
+2. Resume `add-distributed-control-plane` tasks 4.1–4.5 for the deployed POC.
+3. Resume broader `add-route-topology` work for the full configured origin set and geographic candidates.
+4. `add-durable-scan-retention` and later fare/ranking work.
 
-Do not jump directly to provider mass-implementation. Apply and verify changes in dependency order.
+See [docs/MILESTONES.md](docs/MILESTONES.md). Do not jump to provider mass-implementation: the VLC POC must use exactly one reviewed source path and receive independent review before broader expansion.
