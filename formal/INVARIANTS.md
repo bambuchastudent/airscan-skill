@@ -16,7 +16,7 @@ Status values: `candidate`, `specified`, `modeled`, `implemented`, `verified`.
 
 ## INV-ROUTE-002 — Canonical route identity is deterministic
 
-**Statement:** The same normalized origin, destination, and carrier identity must produce the same logical route identity independent of observation order.
+**Statement:** The same normalized origin and destination must produce the same logical direct-route identity independent of carrier, source, scan timestamp or observation order. Different carriers are evidence associated with one airport-pair route.
 
 - Status: candidate
 - Alloy: uniqueness relation planned
