@@ -1,0 +1,15 @@
+# AENA_VLC_SANITIZED_EXCERPT_V1
+# Manually reconstructed minimal factual excerpt from Aena's public VLC catalog, 2026-10-25.
+# Carrier separators are human-added, not verified HTML DOM or response bytes.
+Destination: AMSTERDAM /SCHIPHOL (AMS)
+Carriers: TRANSAVIA (TRA) | EASYJET EUROPE (EJU) | K.L.M. ROYAL DUTCH AIRLINES | VUELING AIRLINES
+Destination: BILBAO (BIO)
+Carriers: VUELING AIRLINES | VOLOTEA | AIR NOSTRUM
+Destination: BERLIN-BRANDERBURG WILLY BRANDT (BER)
+Carriers: RYANAIR (RYR) | EASYJET EUROPE (EJU)
+Destination: BILBAO (bio)
+Carriers: VOLOTEA
+Destination: ASTURIAS (OVD)
+Carriers:
+Destination: BADEN BADEN-KARLSRUHE (FKB) (FKB)
+Carriers: RYANAIR (RYR)
