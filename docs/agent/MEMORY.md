@@ -4,7 +4,7 @@ This file is the curated durable memory for agents working on this repository. K
 
 ## Current state
 
-- Bootstrap is complete and merged. `add-distributed-control-plane` Iteration 1 was accepted by external review and PR #3 merged as `4e82c92b8c6cd1f4716207c4ac18c4ef189c404e`. Iteration 2 passed final external review and PR #4 was merged as `7b693d97d15c0f8642ca2c08ce6ece36bfaa4d18`. Local authenticated distributed-control-plane POC is implemented in **draft PR #5**, verified implementation/spec SHA `7c3432846bee57b1cb29277519001c03f95475e5` with CI `39873870605` **9/9 PASS**; final independent POC review technically accepted the protocol, but flagged one MAJOR false-green CI worker-SDK isolation gate. Evidence remediation at SHA `3c7ddcd469d114e5a40164e2ee5451ee5bd942b1` CI `39880697503` **9/9 PASS** now validates and prints the actual nonempty Maven worker dependency tree. Final independent metadata/evidence review PASS / LOCAL POC COMPLETE on SHA `239ef9e5adcdc846299b6010a9696aa12a623933`; PR #5 merge authorized, cloud deployment tasks 4.x still incomplete. No cloud deployment or route topology.
+- Bootstrap and the local distributed-control-plane POC are complete and merged. PR #5 merged into `develop`; accepted reviewed SHA `239ef9e5adcdc846299b6010a9696aa12a623933`, final PASS evidence commit `1e3b7361af19006d989c3a6542eac73c4187053e`, post-merge `develop` HEAD `e8d2916240275ea98aef808228fe830c29fb49a4`, CI `39923798076` **9/9 PASS**. Distributed-control-plane deployment tasks 4.1–4.5 remain open. The next user-value milestone is **VLC Route/Date Discovery POC** before cloud deployment: run locally, ingest one real VLC-capable source through the accepted worker/control-plane path, and query direct destinations with positive availability evidence in a requested date range. No fares or route expansion yet.
 - Default branch: `develop`.
 - Production implementation language: Java, not Python.
 - Verified runtime baseline: Java 25 Temurin 25.0.4.1, Maven Wrapper 3.9.11, Quarkus 3.40.1.
@@ -77,13 +77,17 @@ OpenSpec tasks are not complete without deterministic evidence and iteration doc
 
 Completed and archived: `bootstrap-agentic-foundation`.
 
-Active dependency order:
+Accepted local milestone: `add-distributed-control-plane` local POC complete; deployment tasks 4.1–4.5 remain open.
 
-1. `add-distributed-control-plane`
-2. `add-route-topology`
-3. `add-durable-scan-retention`
+Current milestone order:
 
-Current review gate: `add-distributed-control-plane` Iteration 2 only; no Iteration 3 until independent review. Do not mass-implement airline adapters before the first provider architecture and scan semantics are validated.
+1. **VLC Route/Date Discovery POC** inside `add-route-topology`, tasks 0.1–0.11.
+2. Return to `add-distributed-control-plane` tasks 4.1–4.5 for deployed POC.
+3. Resume broader `add-route-topology` scope (default origins, additional reviewed sources, geographic candidates).
+4. `add-durable-scan-retention`.
+5. Fare/ranking and later ground-routing work.
+
+The VLC milestone is an intentional user-value exception to the earlier cloud-first dependency order. Do not add multiple providers, fares, or broader origins before the VLC Route/Date POC receives independent PASS. See `docs/MILESTONES.md`.
 
 ## Current invariant areas
 
