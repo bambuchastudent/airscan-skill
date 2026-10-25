@@ -1,8 +1,8 @@
 # Provider Capability Research Gate — research execution plan
 
-**Status:** PLANNED / NOT EXECUTED  
+**Status:** P1 desk research and evidence complete; P2 documentary feasibility with no live probes (access constraints), P3 modeled (not measured), P4 conditional recommendation; P5 independent review PENDING  
 **Date opened:** 2026-10-25 (Europe/Madrid)  
-**Owner / executor:** ChatGPT research agent in the current conversation  
+**Owner / executor:** ChatGPT research agent (author of this research, not independent reviewer)  
 **Independent reviewer:** another agent / independent review chat; executor SHALL NOT self-certify PASS  
 **Baseline:** `develop@301d979f66b765651303337876fe8998a2b2ca99`  
 **Related change:** `openspec/changes/add-route-topology`, especially RT-3 / task 0.11  
