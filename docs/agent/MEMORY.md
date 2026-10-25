@@ -4,7 +4,7 @@ This file is the curated durable memory for agents working on this repository. K
 
 ## Current state
 
-- Bootstrap and the local distributed-control-plane POC are complete and merged. PR #5 merged into `develop`; accepted reviewed SHA `239ef9e5adcdc846299b6010a9696aa12a623933`, final PASS evidence commit `1e3b7361af19006d989c3a6542eac73c4187053e`, post-merge `develop` HEAD `e8d2916240275ea98aef808228fe830c29fb49a4`, CI `39923798076` **9/9 PASS**. Distributed-control-plane deployment tasks 4.1–4.5 remain open. The next user-value milestone is **VLC Route/Date Discovery POC** before cloud deployment: run locally, ingest one real VLC-capable source through the accepted worker/control-plane path, and query direct destinations with positive availability evidence in a requested date range. No fares or route expansion yet.
+- Bootstrap and the local distributed-control-plane POC are complete and merged. PR #5 merged into `develop`; accepted reviewed SHA `239ef9e5adcdc846299b6010a9696aa12a623933`, final PASS evidence commit `1e3b7361af19006d989c3a6542eac73c4187053e`, post-merge `develop` HEAD `e8d2916240275ea98aef808228fe830c29fb49a4`, CI `39923798076` **9/9 PASS**. Distributed-control-plane deployment tasks 4.1–4.5 remain open. The next user-value milestone is **VLC Route/Date Discovery POC** before cloud deployment: run locally, first ingest the airport-wide known VLC direct-route catalog (Aena official destination list is the primary source candidate) through the accepted worker/control-plane path, and only then enrich with independently sourced positive dated availability. Airline-specific evidence must not be mistaken for complete airport coverage. No fares or route expansion yet.
 - Default branch: `develop`.
 - Production implementation language: Java, not Python.
 - Verified runtime baseline: Java 25 Temurin 25.0.4.1, Maven Wrapper 3.9.11, Quarkus 3.40.1.
@@ -81,13 +81,13 @@ Accepted local milestone: `add-distributed-control-plane` local POC complete; de
 
 Current milestone order:
 
-1. **VLC Route/Date Discovery POC** inside `add-route-topology`, tasks 0.1–0.11.
+1. **VLC Route/Date Discovery POC** inside `add-route-topology`, tasks 0.1–0.15.
 2. Return to `add-distributed-control-plane` tasks 4.1–4.5 for deployed POC.
 3. Resume broader `add-route-topology` scope (default origins, additional reviewed sources, geographic candidates).
 4. `add-durable-scan-retention`.
 5. Fare/ranking and later ground-routing work.
 
-The VLC milestone is an intentional user-value exception to the earlier cloud-first dependency order. Do not add multiple providers, fares, or broader origins before the VLC Route/Date POC receives independent PASS. See `docs/MILESTONES.md`.
+The VLC milestone is an intentional user-value exception to the earlier cloud-first dependency order. Do not introduce multiple topology providers or broader origins before the VLC POC receives independent PASS; separate dated schedule sources may be added as needed with explicit coverage. Do not infer unavailable flights from missing positive observations. See `docs/MILESTONES.md`.
 
 ## Current invariant areas
 
