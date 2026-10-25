@@ -67,14 +67,15 @@ Continue the existing durability, snapshot, retention, fare-observation, ranking
 M1 is complete only when all of the following are evidenced:
 
 - local reproducible startup instructions;
-- exactly one reviewed real source path;
-- real VLC live smoke;
-- deterministic sanitized fixture tests;
-- topology and dated availability modeled separately;
-- existing authenticated worker/control-plane protocol used for ingestion;
-- stable route identity and idempotent repeated submission;
-- local query accepts VLC + inclusive date range;
-- each returned destination has a matching observed date plus provenance/freshness;
+- airport-wide VLC topology comes from one reviewed official source (Aena is initial candidate), **not one airline**;
+- normalized source snapshot coverage is reconciled: no advertised direct destination is silently dropped;
+- timestamped VLC live smoke and sanitized deterministic fixture tests;
+- topology and dated availability are modeled separately;
+- accepted authenticated worker/control-plane protocol is used for ingestion;
+- route identity is stable across carriers; duplicate submission is idempotent;
+- `VLC` catalog query returns known direct destinations even if no dated observation exists;
+- inclusive date-range query distinguishes positively confirmed dates, uncovered/unknown routes and provider failures;
+- carrier-specific date coverage and freshness are explicit; no unproven exhaustive all-airline availability claim;
 - provider failure is not negative evidence;
 - no fares are invented;
 - strict OpenSpec + Maven + Graphify + Serena + applicable invariant checks pass;
