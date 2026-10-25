@@ -18,21 +18,22 @@ Status: **COMPLETE**
 
 Purpose: prove the distributed execution and retry/idempotency architecture locally.
 
-### M1 — VLC Route/Date Discovery POC
+### M1 — VLC airport-wide topology + date evidence POC
 
 Status: **NEXT**
 
 User outcome:
 
-> Run AirScan locally and ask for real direct destinations from Valencia (VLC) that have positive availability evidence inside a requested date interval.
+> Run AirScan locally, discover the airport-wide known direct destination network from VLC across carriers, then inspect which destinations have positively observed flight dates in the requested interval.
 
-Target iterations:
+Order:
 
-- **RT-1:** contracts + source research + sanitized fixtures.
-- **RT-2:** one real VLC provider vertical slice + clean-store E2E + local query.
+- **RT-1** — airport-wide VLC contracts; official Aena destination catalog source validation and fixtures; date-source research separately.
+- **RT-2** — ingest all observed Aena VLC direct-route destinations through the accepted worker/control-plane pipeline; local catalog query with provenance.
+- **RT-3** — enrich canonical VLC routes with positive date evidence from separately verified schedule source(s), with explicit incomplete coverage.
 - **Review gate:** independent PASS / VLC ROUTE-DATE POC COMPLETE.
 
-No fare or cloud deployment is required for M1.
+The catalog query must not be Ryanair-only. No full airport-wide date coverage may be claimed until it is supported by independently verified sources. No fares or cloud deployment required.
 
 ### M2 — Deployed distributed-control-plane POC
 
