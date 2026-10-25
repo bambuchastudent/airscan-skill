@@ -4,11 +4,11 @@
 
 ### RT-1 — airport-wide contracts, source research, fixtures
 
-- [ ] 0.1 Define canonical airport, carrier, direct-route, source/scan and route-evidence contracts for all advertised direct routes from VLC. Canonical route identity must not depend on carrier or scan timestamp; test invariants.
-- [ ] 0.2 Define a topology provider and a **separate** date-availability observation provider, each with typed failures and provenance.
+- [x] 0.1 Define canonical airport, carrier, direct-route, source/scan and route-evidence contracts for all advertised direct routes from VLC. Canonical route identity must not depend on carrier or scan timestamp; test invariants.
+- [x] 0.2 Define a topology provider and a **separate** date-availability observation provider, each with typed failures and provenance.
 - [ ] 0.3 Research and validate official **Aena VLC destination catalog** as the first airport-wide topology source; document coverage, freshness, legal/technical access, carrier treatment and limitations. Do not select Ryanair as the route catalog.
 - [ ] 0.4 Capture minimal sanitized Aena fixtures and build deterministic parsing/normalization tests for a representative multi-carrier source snapshot; preserve all observed destination IDs.
-- [ ] 0.5 Design local topology endpoint plus inclusive date-range query with explicit CONFIRMED versus UNKNOWN/UNCOVERED semantics. Research date sources without prematurely choosing a single-airline solution.
+- [x] 0.5 Design local topology endpoint plus inclusive date-range query with explicit CONFIRMED versus UNKNOWN/UNCOVERED semantics. Research date sources without prematurely choosing a single-airline solution.
 
 ### RT-2 — real airport-wide VLC topology
 

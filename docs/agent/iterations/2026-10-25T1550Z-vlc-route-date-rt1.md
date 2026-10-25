@@ -24,3 +24,15 @@ Canonical route key: `DIRECT:<ORIGIN>:<DESTINATION>`; carrier is evidence, not i
 ## Next
 
 Inspect exact-HEAD CI, fix candidate failures, then independent RT-1 review. Resolve Aena access/DOM and source license before describing RT-1 source validation as complete or proceeding to RT-2. Stop after review request; do not automatically begin RT-2.
+
+## Verified code CI and task disposition (2026-10-25T15:58Z)
+
+- Exact tested code SHA `57c75bc4854a41656b2a4364b66dfb083d9ad5ae`; CI https://github.com/bambuchastudent/airscan-skill/actions/runs/40209220626 — **9/9 PASS**.
+- Root Maven 19/19; worker Maven 4/4; Firestore Emulator 5/5; Spotless / Checkstyle / strict archived+active OpenSpec / worker Google SDK isolation / Graphify / Serena / Alloy-TLC-Dafny bootstrap regressions all PASS.
+- Graphify/Serena existing CI smoke verifies baseline symbol dependencies but does not add targeted route-domain relationship assertions. Model-check results remain bootstrap-only and do not claim route properties.
+- `0.1` complete: Java value-object records and tested carrier-independent key, self-route rejection and provenance.
+- `0.2` complete: typed source provider contracts with coverage/error outcomes and separation of topology/date.
+- `0.3` **open**: Aena official candidate researched, but original DOM/Java fetch, robots and permission/terms clearance are unverified.
+- `0.4` **open**: reconstructed fact-excerpt normalization is offline-tested; real captured site fixture and source catalog reconciliation are not.
+- `0.5` complete: future two-endpoint JSON design, inclusive `LocalDate` tests, explicit UNKNOWN/UNCOVERED/CONFIRMED and short Aena Infovuelos date-horizon research. No date source integrated.
+- **Disposition: NEEDS_CHANGES**, not READY_FOR_EXTERNAL_RT1_REVIEW under the user's full RT-1 criteria. External review of bounded candidate PR #8 is useful, but cannot waive source validation without explicit change approval.

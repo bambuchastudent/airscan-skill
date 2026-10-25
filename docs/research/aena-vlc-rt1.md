@@ -30,3 +30,10 @@
 - Ryanair pages remain a possible **carrier-scoped sparse date-evidence** research input for RT-3, never the airport-wide topology authority.
 
 **Decision:** Aena is the one primary official **candidate**, not an approved automated acquisition path yet. Status: access/DOM and data-use clearance required before marking Aena technically validated.
+
+## Early date-source research (RT-1 design only)
+
+- Aena's **Infovuelos** official flight-information UI https://www.aena.es/en/flight-info.html states the search window is from about 2 hours before through **14 days after** query time. This is narrow **operational/scheduled-flight evidence**, not a months-ahead complete flight-date calendar. Aena's same legal and machine-access unknowns apply. No API/HTML selectors or permitted batch acquisition validated.
+- Individual airlines' official route/booking interfaces may show selected positive future dates, but this is carrier-specific sparse evidence. Ryanair public route-page observations from the historical preflight are **not** airport-wide topology and were **not selected** as the primary Aena replacement or as an approved date provider.
+- No date provider was selected for RT-3; source coverage and calendar horizons must be verified independently after RT-2 topology acceptance. An unknown/uncovered route cannot become “no flights” based on a single source's lack of positive days.
+
