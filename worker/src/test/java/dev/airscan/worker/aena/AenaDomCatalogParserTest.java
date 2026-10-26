@@ -38,7 +38,7 @@ class AenaDomCatalogParserTest {
     assertTrue(result.reconciled());
     assertEquals(result, parser.parse(fixture()));
     assertEquals("DIRECT:VLC:TSF", result.routes().get(3).routeId());
-    assertEquals("UNKNOWN", result.routes().get(1).listedCarriers().get(0));
+    assertEquals("UNKNOWN", result.routes().get(2).listedCarriers().get(0));
     assertEquals(2, result.routes().get(0).listedCarriers().size());
   }
 
