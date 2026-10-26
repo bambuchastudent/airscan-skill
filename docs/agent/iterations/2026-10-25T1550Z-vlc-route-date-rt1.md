@@ -51,3 +51,11 @@ Inspect exact-HEAD CI, fix candidate failures, then independent RT-1 review. Res
 - Exact code SHA `1e9ec42f3aa63c29c7fa30b269969a80d67d409b`, CI https://github.com/bambuchastudent/airscan-skill/actions/runs/40211572694 — **9/9 PASS**.
 - Root Maven **19/19**, worker Maven **4/4**, Firestore Emulator **5/5**, all zero failures/errors/skips; Spotless, Checkstyle, strict OpenSpec, Graphify/Serena existing smoke, worker SDK isolation, bootstrap formal checks PASS.
 - Real Aena DOM, rights, Java fetch and actual catalog reconciliation remain **unverified**. 0.3/0.4 stay open; documentation HEAD needs own CI. Status: **NEEDS_SOURCE_DECISION**.
+
+## Manual importer scope update — 2026-10-26
+
+Architectural approval: PR #8 comment https://github.com/bambuchastudent/airscan-skill/pull/8#issuecomment-6400275771. RT-1 now supports **manual one-time Aena VLC source page import**, not unattended acquisition. Same PR, no reset of accepted route contracts. Added manual browser DOM exporter, offline Java HTML parser, JSON snapshot CLI and immutable history with fail-closed atomic latest-publish. Dependency is jsoup 1.23.2 (worker, root test-only); no changes to worker protocol, authentication, outbox or central Firestore.
+
+Verification scope: source-free HTML samples exercise IATA normalization, carrier associations, duplicates/corruption, source count mismatch and preservation of a prior good snapshot. The HTML structural sample was built to match **visible Aena terminology**, not collected from the actual page DOM. Therefore it does **not** meet the genuine-site structural fixture requirement alone; a human browser-exported file is required before checking OpenSpec 0.3/0.4 or claiming source completeness. Request independent evidence review after obtaining the real DOM fixture. User-local saved HTML must not be committed wholesale due reuse/redistribution restrictions.
+
+See `docs/aena-manual-import.md` for reproducible manual steps. Real browser DOM not captured in this agent environment (DNS failure), so any status asserting a fully verified Aena parser would be unsupported.

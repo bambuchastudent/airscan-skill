@@ -86,6 +86,14 @@ The exact resource name may change during implementation, but the contract must:
 - never invent a fare;
 - distinguish no matching positive observations, absent date-source coverage, and provider/scan failure; empty positive results are not evidence of no flights.
 
+### RT-1 manual one-shot topology import (PR #8 architecture correction)
+
+The Aena VLC source is updated **rarely and only when a human explicitly initiates** an import, not through a scheduled crawler. RT-1 provides a Java CLI consuming a user-saved, fully rendered local browser HTML/DOM export; the user captures the source by deliberately saving the public page or manually exporting the rendered `<main>` DOM. This CLI never fetches URLs, authenticates to Aena, modifies Firestore, schedules polling or bypasses anti-bot controls. A user may refresh the local catalog later by running the same command with a new captured file and timestamp.
+
+The CLI must identify advertised destination IATA codes (rightmost airport code for city/airport pairs such as `(MIL) (TSF)`), retain website-listed carrier associations as **listed**, preserve unknowns, diagnose malformed candidates/duplicates and reconcile unique results with the **count advertised by the saved source** if present. No number (historically 84, later 81) is hardcoded as an invariant. Incomplete or uncertain parsing must not replace a previous accepted snapshot. Output is local versioned JSON with deterministic ordering, source SHA-256, capture time, source URL and importer/coverage diagnostics; worker/control-plane ingestion is still RT-2.
+
+A fabricated HTML table demonstrating visible labels is **not a genuine Aena DOM fixture**. For task 0.4 independent acceptance, a minimal sanitized fixture must retain the actual copied element hierarchy of a public, rendered Aena snapshot, and its candidate counts must reconcile. Full copyright-protected page captures stay user-local; neither a permission grant for redistribution nor complete current coverage is implied. See `docs/aena-manual-import.md`.
+
 ### Source selection and coverage
 
 **Topology first: origin VLC, all carriers.** Research the official Aena Valencia airport destinations list as the first candidate: https://www.aena.es/en/valencia/airlines-destinations/airport-destinations.html. It currently advertises a broad airport-wide destination network with carrier associations, but is a *published route catalog*, not a date-by-date schedule. Verify parsing, actual source scope, completeness limitations and freshness; do not hardcode a current count as an invariant.
@@ -140,8 +148,8 @@ Geographic candidate generation remains after the VLC POC. Store airport coordin
 ### RT-1 — airport-wide VLC topology contracts and source validation
 
 - define minimal domain, canonical airport-pair route identity and provenance;
-- research/verify official Aena VLC destination catalog as the topology candidate (not Ryanair);
-- capture sanitized offline fixtures and test parsing;
+- validate manually captured official Aena VLC destination HTML/DOM as the topology candidate (not Ryanair);
+- provide a one-shot local file importer and sanitized source-native offline fixtures with deterministic parsing/reconciliation tests;
 - define separate date evidence provider contract and plan, without prematurely choosing one airline;
 - design endpoints for the complete known VLC route catalog and date annotation.
 

@@ -2,6 +2,13 @@
 
 This file is the curated durable memory for agents working on this repository. Keep it concise and factual. Update it when durable project state changes; use WORKLOG.md for chronology.
 
+## 2026-10-26 RT-1 manual one-shot decision — independent source-DOM gate pending
+
+- Product architecture decision PR #8 issuecomment `6400275771` supersedes unattended-crawler requirements: Aena VLC catalog refresh is **human-initiated via saved rendered DOM file**, with no scheduled HTTP access, API credentials or ongoing crawler. Prior route contracts 0.1/0.2/0.5 remain accepted.
+- One-shot importer `dev.airscan.worker.aena.AenaCatalogImportCli` (worker Java 25) consumes `--input` local browser HTML, `--output` directory, explicit `--captured-at`, uses jsoup 1.23.2 and Jackson; produces sorted, versioned immutable JSON and only atomically updates `latest.json` when source count, candidate identity and reconciliation pass. Parser recognizes headed HTML tables / route card lists, separates website-listed carrier labels from assumed operating airline, normalizes multi-IATA pairs using rightmost airport code. No network calls/worker protocol changes/Firestore.
+- `scripts/export-aena-dom.js` manually copies rendered `<main>` DOM to local HTML via browser, no network requests. Instructions: `docs/aena-manual-import.md`. Source displayed **81 destinations / 37 airlines** on 2026-10-26 (historical web view 84/37); no count is hardcoded. Browser raw DOM from actual Aena page **not available** to this assistant due DNS restrictions; repository HTML table fixture is **constructed from page-visible labels, not genuine structural capture**. Must not check task 0.4 or assert real-site parser acceptance until genuine minimal structural fixture and live manual import reconciliation exist.
+- Status is **SOURCE_DOM_EVIDENCE_PENDING**, not ongoing crawler authorization deadlock; earlier architecture options from 2026-10-25 are historical. Do not merge or start RT-2/RT-3 before independent final gate. `docs/research/aena-vlc-rt1.md` / iteration handoff record limitations.
+
 ## 2026-10-25 RT-1 external review remediation — NEEDS_SOURCE_DECISION
 
 - Remediation code exact SHA `1e9ec42f3aa63c29c7fa30b269969a80d67d409b`; GitHub CI `40211572694` 9/9 PASS (19 root, 4 worker, 5 Emulator IT). Final documentation HEAD has separate CI. Green regression evidence does not resolve 0.3/0.4 or grant source rights.
