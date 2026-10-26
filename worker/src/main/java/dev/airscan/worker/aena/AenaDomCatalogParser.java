@@ -88,18 +88,29 @@ public final class AenaDomCatalogParser {
       }
     }
     if (candidates.isEmpty()) {
-      // The displayed Aena destination listing can be a card/list instead of a table.
-      // Only accept containers with explicit same-card country/airlines fields.
+      // Aena's rendered listing can use list cards rather than HTML table rows.
+      // Identify the listing by its own destination-column heading: never parse
+      // the similarly named airport dropdown filter as a route catalog.
       for (Element list : scope.select("ul,ol")) {
-        for (Element li : list.children()) {
-          if (!"li".equals(li.normalName())) {
-            continue;
-          }
-          String text = li.text().toLowerCase(Locale.ROOT);
-          if (text.contains("country") || text.contains("país")) {
-            if (text.contains("airlines") || text.contains("aerolíneas")) {
+        boolean hasDestinationHeader =
+            list.children().stream()
+                .filter(child -> "li".equals(child.normalName()))
+                .anyMatch(
+                    child ->
+                        child.select("*").stream()
+                            .anyMatch(
+                                heading ->
+                                    HEADING.matcher(heading.ownText().strip()).matches()));
+        if (hasDestinationHeader) {
+          for (Element li : list.children()) {
+            if ("li".equals(li.normalName())
+                && !HEADING.matcher(li.ownText().strip()).matches()
+                && IATA.matcher(li.text()).find()) {
               candidates.add(li);
             }
+          }
+          if (!candidates.isEmpty()) {
+            break;
           }
         }
       }
@@ -118,7 +129,11 @@ public final class AenaDomCatalogParser {
       } else {
         destinationNode = row.selectFirst("a,span,strong,h2,h3,h4");
       }
-      String destinationName = destinationNode == null ? "" : destinationNode.text();
+      String destinationName =
+          destinationNode == null ? row.ownText() : destinationNode.text();
+      if (!IATA.matcher(destinationName).find() && "li".equals(row.normalName())) {
+        destinationName = row.text().split("(?i)(?:country|país|airlines|aerolíneas)", 2)[0];
+      }
       List<String> codes = new ArrayList<>();
       Matcher iata = IATA.matcher(destinationName);
       while (iata.find()) {
