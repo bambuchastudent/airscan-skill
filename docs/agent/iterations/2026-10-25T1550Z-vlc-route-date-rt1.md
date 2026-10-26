@@ -59,3 +59,11 @@ Architectural approval: PR #8 comment https://github.com/bambuchastudent/airscan
 Verification scope: source-free HTML samples exercise IATA normalization, carrier associations, duplicates/corruption, source count mismatch and preservation of a prior good snapshot. The HTML structural sample was built to match **visible Aena terminology**, not collected from the actual page DOM. Therefore it does **not** meet the genuine-site structural fixture requirement alone; a human browser-exported file is required before checking OpenSpec 0.3/0.4 or claiming source completeness. Request independent evidence review after obtaining the real DOM fixture. User-local saved HTML must not be committed wholesale due reuse/redistribution restrictions.
 
 See `docs/aena-manual-import.md` for reproducible manual steps. Real browser DOM not captured in this agent environment (DNS failure), so any status asserting a fully verified Aena parser would be unsupported.
+
+## Manual importer exact-code CI — 2026-10-26
+
+- HEAD `e2b1ed9f6265dbbf16241c24052526a415e8d76f` — https://github.com/bambuchastudent/airscan-skill/actions/runs/40330470134 **9/9 PASS**.
+- Root `./mvnw -B -ntp clean verify` 19/19; worker `./mvnw -B -ntp -f worker/pom.xml clean verify` 10/10; Firestore Emulator `./mvnw -B -ntp -Pfirestore-emulator verify` 5/5; spotless/checkstyle, strict OpenSpec archived/active, worker SDK isolation, existing Graphify/Serena smoke and bootstrap formal regression checks PASS.
+- Manual DOM CLI and preservation tests pass for a **constructed local structural HTML example** only; actual page DOM/advertised-count reconciliation untested. Browser-extracted DOM source and a minimal authentic source-native sanitized test fixture are still required for 0.3/0.4. No current PASS for those tasks, no RT-2/RT-3 runtime work.
+- Request an external review of the code and explicit remaining evidence before accepting/merging PR #8. Final documentation-only closeout commit must pass its own exact-HEAD CI.
+
