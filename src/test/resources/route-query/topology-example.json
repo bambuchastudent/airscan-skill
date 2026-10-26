@@ -1,0 +1,30 @@
+{
+  "origin": "VLC",
+  "sourceCoverage": "PARTIAL",
+  "scanStatus": "SUCCESS_WITH_OBSERVATIONS",
+  "sourceSnapshot": {
+    "sourceId": "aena-vlc",
+    "scanId": "example-1",
+    "observedAt": "2026-10-25T15:00:00Z"
+  },
+  "routes": [
+    {
+      "routeId": "DIRECT:VLC:AMS",
+      "origin": "VLC",
+      "destination": "AMS",
+      "carriers": [
+        "TRANSAVIA (TRA)",
+        "EASYJET EUROPE (EJU)"
+      ],
+      "evidence": [
+        {
+          "sourceId": "aena-vlc",
+          "scanId": "example-1",
+          "observedAt": "2026-10-25T15:00:00Z"
+        }
+      ]
+    }
+  ],
+  "omissions": [],
+  "freshness": "SOURCE_OBSERVATION_TIMESTAMP"
+}

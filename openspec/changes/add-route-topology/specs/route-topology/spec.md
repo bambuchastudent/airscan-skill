@@ -93,7 +93,7 @@ The system SHALL use deterministic canonical identity for airports, carriers, an
 
 #### Scenario: Same route is observed again
 
-- **WHEN** another scan observes the same normalized origin, destination, and applicable carrier identity
+- **WHEN** another scan observes the same normalized origin and destination regardless of which carrier is observed
 - **THEN** the observation attaches to the same logical route identity
 
 ### Requirement: Provenance is queryable
