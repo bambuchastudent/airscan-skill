@@ -103,4 +103,44 @@ class AenaDomCatalogParserTest {
     assertEquals("PARTIAL", second.report().coverage());
     assertTrue(java.util.Arrays.equals(previous, Files.readAllBytes(output.resolve("latest.json"))));
   }
+  @Test
+  void parsesSourceLabelledCardListAndExcludesDestinationPicker() {
+    String html =
+        "<main><h1>Valencia Airport destinations</h1>"
+            + "<p>Valencia Airport has a total of 2 destinations served by 2 airlines</p>"
+            + "<div><select><option>AMSTERDAM (AMS)</option></select></div>"
+            + "<ul><li><span>Airport destination</span></li>"
+            + "<li><a>AMSTERDAM (AMS)</a>"
+            + "<div><span>Country</span> NETHERLANDS</div>"
+            + "<div><span>Airlines</span><a>TRANSAVIA</a><a>KLM</a></div></li>"
+            + "<li><a>BILBAO (BIO)</a>"
+            + "<div><span>Country</span> SPAIN</div>"
+            + "<div><span>Airlines</span></div></li></ul>"
+            + "</main>";
+    var result = new AenaDomCatalogParser().parse(html);
+    assertEquals(2, result.sourceCandidateRows());
+    assertTrue(result.publishable());
+    assertEquals(2, result.routes().size());
+    assertEquals("DIRECT:VLC:AMS", result.routes().get(0).routeId());
+    assertEquals("UNKNOWN", result.routes().get(1).listedCarriers().get(0));
+  }
+
+  @Test
+  void endToEndMainInvocationSavesStableAcceptedJson() throws Exception {
+    Path input = temp.resolve("saved-from-browser.html");
+    Path output = temp.resolve("manual-catalog");
+    Files.writeString(input, fixture());
+    AenaCatalogImportCli.main(
+        new String[] {
+          "--input", input.toString(),
+          "--output", output.toString(),
+          "--captured-at", "2026-10-26T13:00:00Z"
+        });
+    String saved = Files.readString(output.resolve("latest.json"));
+    assertTrue(saved.contains("DIRECT:VLC:AMS"));
+    assertTrue(saved.contains("aena-manual-dom-v1"));
+    assertTrue(saved.contains("sourceSha256"));
+    assertTrue(saved.contains("2026-10-26T13:00:00Z"));
+  }
+
 }
