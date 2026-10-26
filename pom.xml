@@ -16,11 +16,6 @@
   </properties>
   <dependencyManagement>
     <dependencies>
-    <dependency>
-      <groupId>org.jsoup</groupId>
-      <artifactId>jsoup</artifactId>
-      <version>1.23.2</version>
-    </dependency>
       <dependency>
         <groupId>io.quarkus.platform</groupId>
         <artifactId>quarkus-bom</artifactId>
@@ -31,6 +26,11 @@
     </dependencies>
   </dependencyManagement>
   <dependencies>
+    <dependency>
+      <groupId>org.jsoup</groupId>
+      <artifactId>jsoup</artifactId>
+      <version>1.23.2</version>
+    </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-arc</artifactId>

@@ -137,9 +137,6 @@ public final class AenaDomCatalogParser {
         rejected++;
         continue;
       }
-      if (codes.size() > 1 && !codes.get(0).equals(airport)) {
-        diagnostics.add("candidate " + (i + 1) + ": city/airport pair " + codes);
-      }
       if (routes.containsKey(airport)) {
         duplicates++;
       }
